@@ -15,6 +15,9 @@ def get_tile(cow, row):
     tile.set_colorkey((0, 0, 0))
     return tile
 
+t_chao = get_tile(8, 0)
+t_chao2 = get_tile(8, 1)
+
 MAPA = [
     "                      ",
     "                      ",
