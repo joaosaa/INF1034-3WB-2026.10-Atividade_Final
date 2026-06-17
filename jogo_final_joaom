@@ -5,6 +5,9 @@ pygame.init()
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 
+char1 = pygame.image.load('Characters/mainchar.png')
+char1 = pygame.transform.scale(char1, (200, 200))
+
 TILE = 64
 tileset = pygame.image.load('CaveG.png').convert()
 tileset.set_colorkey((0, 0, 0))
@@ -40,21 +43,47 @@ for i in range(4, 0, -1):
     camadas.append(img)
 
 camera_x = 0.0
+char1_x = 50
+char1_y = 450
+velocidadechar1_x = 3
+velocidadechar1_y = 0
+gravidade = 0.8
+forca_pulo = -15
+no_chao = False
+chao_y = 450
+
 
 while True:
     for evento in pygame.event.get():
         if evento.type == pygame.QUIT:
             pygame.quit(); sys.exit()
-
+            
     clock.tick(60)
+
+    screen.blit(char1, (char1_x, char1_y))
 
     teclas = pygame.key.get_pressed()
     if teclas[pygame.K_d]: 
         camera_x += 5
+        char1_x += velocidadechar1_x
 
     if teclas[pygame.K_a]: 
         camera_x -= 5
+        char1_x -= velocidadechar1_x
     
+    velocidadechar1_y += gravidade
+    char1_y += velocidadechar1_y
+
+    if char1_y >= chao_y:
+       char1_y = chao_y
+       velocidadechar1_y = 0
+       no_chao = True
+    else:
+        no_chao = False
+    
+    if teclas[pygame.K_SPACE] and no_chao:
+        velocidadechar1_y = forca_pulo
+
 
     screen.fill((3, 18, 15))
     for i, camada in enumerate(camadas):
@@ -71,4 +100,7 @@ while True:
             elif cel == 'V':
                  screen.blit(t_chao2, (x, y))   
     
+
+    
+
     pygame.display.update()
