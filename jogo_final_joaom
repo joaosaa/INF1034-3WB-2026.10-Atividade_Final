@@ -60,8 +60,6 @@ while True:
             
     clock.tick(60)
 
-    screen.blit(char1, (char1_x, char1_y))
-
     teclas = pygame.key.get_pressed()
     if teclas[pygame.K_d]: 
         camera_x += 5
@@ -99,6 +97,10 @@ while True:
                 screen.blit(t_chao, (x, y))
             elif cel == 'V':
                  screen.blit(t_chao2, (x, y))   
+    
+    
+    screen.blit(char1, (char1_x, char1_y))
+
     
 
     
