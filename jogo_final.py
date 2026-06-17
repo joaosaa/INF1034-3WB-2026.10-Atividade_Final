@@ -5,6 +5,31 @@ pygame.init()
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 
+TILE = 64
+tileset = pygame.image.load('CaveG.png').convert()
+tileset.set_colorkey((0, 0, 0))
+
+def get_tile(cow, row):
+    tile = pygame.Surface((TILE, TILE))
+    tile.blit(tileset, (0 , 0), (cow * TILE, row * TILE, TILE, TILE))
+    tile.set_colorkey((0, 0, 0))
+    return tile
+
+t_chao = get_tile(8, 0)
+t_chao2 = get_tile(8, 1)
+
+MAPA = [
+    "                      ",
+    "                      ",
+    "                      ",
+    "                      ",
+    "                      ",
+    "                      ",
+    "                      ",
+    "CCCCCCCCCCCCCCCCCCCCCC",
+    "VVVVVVVVVVVVVVVVVVVVVV",
+]
+
 camadas = []
 velocidades = [0.05, 0.15, 0.25, 0.4]
 for i in range(4, 0, -1):
@@ -32,4 +57,12 @@ while True:
         screen.blit(camada, (-deslocamento, 0))
         screen.blit(camada, (1280 - deslocamento, 0))
 
+    for i, linha in enumerate(MAPA):
+        for j, cel in enumerate(linha):
+            x = j * TILE - int(camera_x)
+            y = i * TILE
+            if cel == 'C':
+                screen.blit(t_chao, (x, y))
+            elif cel == 'V':
+                 screen.blit(t_chao2, (x, y))   
     pygame.display.update()
