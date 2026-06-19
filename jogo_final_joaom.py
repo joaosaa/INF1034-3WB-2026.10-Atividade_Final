@@ -1,0 +1,108 @@
+import pygame, sys
+
+pygame.init()
+
+screen = pygame.display.set_mode((1280, 720))
+clock = pygame.time.Clock()
+
+char1 = pygame.image.load('Characters/mainchar.png')
+char1 = pygame.transform.scale(char1, (200, 200))
+
+TILE = 64
+tileset = pygame.image.load('cave16.png').convert()
+tileset.set_colorkey((0, 0, 0))
+
+def get_tile(cow, row):
+    tile = pygame.Surface((TILE, TILE))
+    tile.blit(tileset, (0 , 0), (cow * TILE, row * TILE, TILE, TILE))
+    tile.set_colorkey((0, 0, 0))
+    return tile
+
+t_chao = get_tile(8, 0)
+t_chao2 = get_tile(8, 1)
+
+MAPA = [
+    "                      ",
+    "                      ",
+    "                      ",
+    "                      ",
+    "                      ",
+    "                      ",
+    "                      ",
+    "                      ",
+    "                      ",
+]
+
+
+camadas = []
+velocidades = [0.05, 0.15, 0.25, 0.4]
+for i in range(4, 0, -1):
+    img = pygame.image.load(f'Background/ParallaxCave{i}.png').convert()
+    img = pygame.transform.scale(img, (1280, 720))
+    img.set_colorkey((0, 0, 0))
+    camadas.append(img)
+
+camera_x = 0.0
+char1_x = 50
+char1_y = 450
+velocidadechar1_x = 3
+velocidadechar1_y = 0
+gravidade = 0.8
+forca_pulo = -15
+no_chao = False
+chao_y = 450
+
+
+while True:
+    for evento in pygame.event.get():
+        if evento.type == pygame.QUIT:
+            pygame.quit(); sys.exit()
+            
+    clock.tick(60)
+
+    teclas = pygame.key.get_pressed()
+    if teclas[pygame.K_d]: 
+        camera_x += 5
+        char1_x += velocidadechar1_x
+
+    if teclas[pygame.K_a]: 
+        camera_x -= 5
+        char1_x -= velocidadechar1_x
+    
+    velocidadechar1_y += gravidade
+    char1_y += velocidadechar1_y
+
+    if char1_y >= chao_y:
+       char1_y = chao_y
+       velocidadechar1_y = 0
+       no_chao = True
+    else:
+        no_chao = False
+    
+    if teclas[pygame.K_SPACE] and no_chao:
+        velocidadechar1_y = forca_pulo
+
+
+    screen.fill((3, 18, 15))
+    for i, camada in enumerate(camadas):
+        deslocamento = int(camera_x * velocidades[i]) % 1280
+        screen.blit(camada, (-deslocamento, 0))
+        screen.blit(camada, (1280 - deslocamento, 0))
+
+    for i, linha in enumerate(MAPA):
+        for j, cel in enumerate(linha):
+            x = j * TILE - int(camera_x)
+            y = i * TILE
+            if cel == 'C':
+                screen.blit(t_chao, (x, y))
+            elif cel == 'V':
+                 screen.blit(t_chao2, (x, y))   
+    
+    
+    screen.blit(char1, (char1_x, char1_y))
+
+    
+
+    
+
+    pygame.display.update()
