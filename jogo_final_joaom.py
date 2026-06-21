@@ -9,7 +9,7 @@ char1 = pygame.image.load('Characters/mainchar.png')
 char1 = pygame.transform.scale(char1, (200, 200))
 
 TILE = 64
-tileset = pygame.image.load('CaveG.png').convert()
+tileset = pygame.image.load('cave16.png').convert()
 tileset.set_colorkey((0, 0, 0))
 
 def get_tile(cow, row):
@@ -44,13 +44,13 @@ for i in range(4, 0, -1):
 
 camera_x = 0.0
 char1_x = 50
-char1_y = 450
+char1_y = 380
 velocidadechar1_x = 3
 velocidadechar1_y = 0
 gravidade = 0.8
 forca_pulo = -15
 no_chao = False
-chao_y = 450
+chao_y = 380
 
 
 while True:
