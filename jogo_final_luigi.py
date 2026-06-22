@@ -24,7 +24,6 @@ som_aterrissagem = pygame.mixer.Sound("sounds/ATERRISSAGEM (LANDING AFTER JUMP)/
 som_passos.set_volume(0.4) 
 canal_passos = pygame.mixer.Channel(1) 
 
-# Logica dos passos (som de passos toca enquanto o jogador estiver se movendo, e para quando ele parar)
 
 def atualizar_sistema_sonoro(jogador_movendo): 
     if jogador_movendo: 
@@ -63,7 +62,7 @@ while True:
     # ativação do som
 
     andando = teclas[pygame.K_d] or teclas[pygame.K_a] 
-    atualizar_sistema_sonoro(andando) # atualiza o sistema sonoro com base no estado de movimento do jogador
+    atualizar_sistema_sonoro(andando)
 
     screen.fill((3, 18, 15))
     for i, camada in enumerate(camadas):
