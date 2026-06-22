@@ -70,19 +70,19 @@ t_topo = get_tile(1, 0)
 t_fill = get_tile(1, 4)  
 
 MAPA = [
-    "                                                              ",
-    "                                                              ",
-    "                                                              ",
-    "                                                              ",
-    "                                                              ",
-    "                          PPP                                 ",
-    "              PPP                     PPP            PPP      ",
-    "                                                               ",
-    "CCCCCCCCCC        CCCCCCCCCCCCCCC        CCCCCCCCCCCCCCCCCCCC",
-    "DDDDDDDDDD        DDDDDDDDDDDDDDD        DDDDDDDDDDDDDDDDDDDD",
-    "DDDDDDDDDD        DDDDDDDDDDDDDDD        DDDDDDDDDDDDDDDDDDDD",
-    "DDDDDDDDDD        DDDDDDDDDDDDDDD        DDDDDDDDDDDDDDDDDDDD",
-    "DDDDDDDDDD        DDDDDDDDDDDDDDD        DDDDDDDDDDDDDDDDDDDD",
+    "                                                       ",
+    "                                                       ",
+    "                                                       ",
+    "                                                       ",
+    "                                                       ",
+    "                   PPP                                 ",
+    "            PPP                PPP            PPP      ",
+    "                                                       ",
+    "CCCCCCCCCC     CCCCCCCCCCCCCCC     CCCCCCCCCCCCCCCCCCCC",
+    "DDDDDDDDDD     DDDDDDDDDDDDDDD     DDDDDDDDDDDDDDDDDDDD",
+    "DDDDDDDDDD     DDDDDDDDDDDDDDD     DDDDDDDDDDDDDDDDDDDD",
+    "DDDDDDDDDD     DDDDDDDDDDDDDDD     DDDDDDDDDDDDDDDDDDDD",
+    "DDDDDDDDDD     DDDDDDDDDDDDDDD     DDDDDDDDDDDDDDDDDDDD",
 ]
 
 LARGURA_MAPA = max(len(linha) for linha in MAPA)
