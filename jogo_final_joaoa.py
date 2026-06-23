@@ -1,26 +1,6 @@
 import pygame, sys
 
 pygame.init()
-pygame.mixer.init()
-
-#audio
-pygame.mixer.music.load("sounds/TRILHA SONORA/Soundtrack.mp3")
-pygame.mixer.music.set_volume(0.090)
-pygame.mixer.music.play(-1)
-
-som_passos = pygame.mixer.Sound("sounds/PASSOS NA PEDRA/PASSO.mpeg")
-som_pulo = pygame.mixer.Sound("sounds/PULO/jump.mp3")
-som_moeda = pygame.mixer.Sound("sounds/COLETAR MOEDA/Picked Coin Echo.wav")
-
-som_passos.set_volume(0.4)
-canal_passos = pygame.mixer.Channel(1)
-
-def atualizar_sistema_sonoro(jogador_movendo):
-    if jogador_movendo:
-        if not canal_passos.get_busy():
-            canal_passos.play(som_passos, loops=-1)
-    else:
-        canal_passos.stop()
 
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
@@ -48,7 +28,7 @@ personagem_parado = frames_andar[0]
 spritesheet_pular = pygame.image.load('Characters/spritesheet_pular.png').convert_alpha()
 LARGURA_TOTAL_PULAR = spritesheet_pular.get_width()
 FRAME_H_PULAR = spritesheet_pular.get_height()
-ESCALA_PULAR = 0.38
+ESCALA_PULAR = 0.40
 
 NUM_FRAMES_PULAR = 7
 frame_w_fixo_pular = LARGURA_TOTAL_PULAR // NUM_FRAMES_PULAR
@@ -87,35 +67,45 @@ t_topo = get_tile(1, 0)
 t_fill = get_tile(1, 4)  
 
 MAPA = [
-    "                                                              ",
-    "                                                              ",
-    "                                                              ",
-    "                                                              ",
-    "                                                              ",
-    "                          PPP                                 ",
-    "              PPP                     PPP            PPP      ",
-    "                                                               ",
-    "CCCCCCCCCC        CCCCCCCCCCCCCCC        CCCCCCCCCCCCCCCCCCCC",
-    "DDDDDDDDDD        DDDDDDDDDDDDDDD        DDDDDDDDDDDDDDDDDDDD",
-    "DDDDDDDDDD        DDDDDDDDDDDDDDD        DDDDDDDDDDDDDDDDDDDD",
-    "DDDDDDDDDD        DDDDDDDDDDDDDDD        DDDDDDDDDDDDDDDDDDDD",
-    "DDDDDDDDDD        DDDDDDDDDDDDDDD        DDDDDDDDDDDDDDDDDDDD",
+    "                                                             ",
+    "                                                             ",
+    "                                                             ",
+    "                                                             ",
+    "                                                             ",
+    "                          PPP                                ",
+    "                PP     PP                PPP         PPP     ",
+    "                                                             ",
+    "CCCCCCCCCC  CCC   CCCCCCCCCCCCCCC       CCCCCCCCCCCCCCCCCCCC",
+    "DDDDDDDDDD  DDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDD",
+    "DDDDDDDDDD  DDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDD",
+    "DDDDDDDDDD  DDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDD",
+    "DDDDDDDDDD  DDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDD",
 ]
 
 LARGURA_MAPA = max(len(linha) for linha in MAPA)
 MAPA = [linha.ljust(LARGURA_MAPA) for linha in MAPA]
 
+FOLGA_TOPO_TILE = 28  # o desenho do t_topo so comeca 28px dentro da celula de 64px
+
+collider_list = []
+for i in range(len(MAPA)):
+    for j in range(len(MAPA[i])):
+        if MAPA[i][j] == "C" or MAPA[i][j] == "P":
+            collider_list.append(pygame.Rect(j * TILE, i * TILE + FOLGA_TOPO_TILE, TILE, TILE - FOLGA_TOPO_TILE))
+        elif MAPA[i][j] == "D":
+            collider_list.append(pygame.Rect(j * TILE, i * TILE, TILE, TILE))
+
 #movimentação do personagem
+ALTURA_COLISAO = 189  # altura real do personagem visivel (sem a folga vazia abaixo dos pes)
+LARGURA_COLISAO = 60  # largura real do corpo (sem a folga vazia nas laterais)
+DESLOCAMENTO_X_COLISAO = 31  # onde o corpo realmente comeca dentro do recorte
 personagem_x = 200 
 camera_x = 0.0
-char1_y = 360
+char1_y = 323
 velocidadechar1_y = 0
 gravidade = 0.8
 forca_pulo = -15
 no_chao = True
-contador_aterrissagem = 0
-DURACAO_ATERRISSAGEM = 15
-chao_y = 360
 virado_direita = True
 
 while True:
@@ -143,41 +133,46 @@ while True:
     camera_x = max(0, personagem_x - 200)
     char1_x = personagem_x - camera_x  
 
+    # COLISAO HORIZONTAL (primeiro, igual no Mario)
+    collider_personagem = pygame.Rect(int(personagem_x + DESLOCAMENTO_X_COLISAO), int(char1_y), LARGURA_COLISAO, ALTURA_COLISAO)
+    for bloco in collider_list:
+        if collider_personagem.colliderect(bloco):
+            if virado_direita:
+                personagem_x = bloco.left - DESLOCAMENTO_X_COLISAO - LARGURA_COLISAO
+            else:
+                personagem_x = bloco.right - DESLOCAMENTO_X_COLISAO
+            collider_personagem = pygame.Rect(int(personagem_x + DESLOCAMENTO_X_COLISAO), int(char1_y), LARGURA_COLISAO, ALTURA_COLISAO)
+
+    camera_x = max(0, personagem_x - 200)
+    char1_x = personagem_x - camera_x
+
     velocidadechar1_y += gravidade
     char1_y += velocidadechar1_y
 
-    estava_no_ar = not no_chao
-    if char1_y >= chao_y:
-        char1_y = chao_y
-        velocidadechar1_y = 0
-        no_chao = True
-        if estava_no_ar:
-            contador_aterrissagem = DURACAO_ATERRISSAGEM
-    else:
-        no_chao = False
+    # COLISAO VERTICAL (depois)
+    no_chao = False
+    collider_personagem = pygame.Rect(int(personagem_x + DESLOCAMENTO_X_COLISAO), int(char1_y), LARGURA_COLISAO, ALTURA_COLISAO)
+    caixa_checagem = collider_personagem.inflate(0, 4)  # um pouco maior, pra contar "encostando" como colisao
+    for bloco in collider_list:
+        if caixa_checagem.colliderect(bloco):
+            if velocidadechar1_y >= 0:
+                char1_y = bloco.top - ALTURA_COLISAO
+                velocidadechar1_y = 0
+                no_chao = True
+            elif velocidadechar1_y < 0:
+                char1_y = bloco.bottom
+                velocidadechar1_y = 0
+            collider_personagem = pygame.Rect(int(personagem_x + DESLOCAMENTO_X_COLISAO), int(char1_y), LARGURA_COLISAO, ALTURA_COLISAO)
+            caixa_checagem = collider_personagem.inflate(0, 4)
 
     if teclas[pygame.K_SPACE] and no_chao:
         velocidadechar1_y = forca_pulo
-        som_pulo.play()
-
-    atualizar_sistema_sonoro(movendo and no_chao)
 
     # animacao do personagem
     deslocamento_y_pulo = 0
-    if contador_aterrissagem > 0:
-        imagem_atual = frames_pular[1]   
-        deslocamento_y_pulo = -31
-        contador_aterrissagem -= 1
-    elif not no_chao:
-        if velocidadechar1_y < -3:
-            imagem_atual = frames_pular[2] 
-            deslocamento_y_pulo = -20
-        elif velocidadechar1_y > 3:
-            imagem_atual = frames_pular[4]  
-            deslocamento_y_pulo = -9
-        else:
-            imagem_atual = frames_pular[3]   
-            deslocamento_y_pulo = -1
+    if not no_chao:
+        imagem_atual = frames_pular[3]   # frame fixo enquanto no ar
+        deslocamento_y_pulo = -11
     elif movendo and no_chao:
         contador_frames += 1
         if contador_frames >= INTERVALO_FRAME:
