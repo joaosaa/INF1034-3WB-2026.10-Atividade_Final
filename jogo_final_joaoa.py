@@ -9,7 +9,7 @@ clock = pygame.time.Clock()
 spritesheet_andar = pygame.image.load('Characters/spritesheet_andar.png').convert_alpha()
 LARGURA_TOTAL = spritesheet_andar.get_width()
 FRAME_H = spritesheet_andar.get_height()
-ESCALA = 0.9
+ESCALA = 0.64
 
 NUM_FRAMES = 7
 frame_w_fixo = LARGURA_TOTAL // NUM_FRAMES
@@ -85,23 +85,18 @@ MAPA = [
 LARGURA_MAPA = max(len(linha) for linha in MAPA)
 MAPA = [linha.ljust(LARGURA_MAPA) for linha in MAPA]
 
-FOLGA_TOPO_TILE = 28  # o desenho do t_topo so comeca 28px dentro da celula de 64px
-
 collider_list = []
 for i in range(len(MAPA)):
     for j in range(len(MAPA[i])):
         if MAPA[i][j] == "C" or MAPA[i][j] == "P":
-            collider_list.append(pygame.Rect(j * TILE, i * TILE + FOLGA_TOPO_TILE, TILE, TILE - FOLGA_TOPO_TILE))
+            collider_list.append(pygame.Rect(j * TILE, i * TILE + 32, TILE, TILE - 32))
         elif MAPA[i][j] == "D":
             collider_list.append(pygame.Rect(j * TILE, i * TILE, TILE, TILE))
 
 #movimentação do personagem
-ALTURA_COLISAO = 189  # altura real do personagem visivel (sem a folga vazia abaixo dos pes)
-LARGURA_COLISAO = 60  # largura real do corpo (sem a folga vazia nas laterais)
-DESLOCAMENTO_X_COLISAO = 31  # onde o corpo realmente comeca dentro do recorte
 personagem_x = 200 
 camera_x = 0.0
-char1_y = 323
+char1_y = 403
 velocidadechar1_y = 0
 gravidade = 0.8
 forca_pulo = -15
@@ -133,15 +128,15 @@ while True:
     camera_x = max(0, personagem_x - 200)
     char1_x = personagem_x - camera_x  
 
-    # COLISAO HORIZONTAL (primeiro, igual no Mario)
-    collider_personagem = pygame.Rect(int(personagem_x + DESLOCAMENTO_X_COLISAO), int(char1_y), LARGURA_COLISAO, ALTURA_COLISAO)
+    #colisão horizontal
+    collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
     for bloco in collider_list:
         if collider_personagem.colliderect(bloco):
             if virado_direita:
-                personagem_x = bloco.left - DESLOCAMENTO_X_COLISAO - LARGURA_COLISAO
+                personagem_x = bloco.left - personagem_parado.get_width()
             else:
-                personagem_x = bloco.right - DESLOCAMENTO_X_COLISAO
-            collider_personagem = pygame.Rect(int(personagem_x + DESLOCAMENTO_X_COLISAO), int(char1_y), LARGURA_COLISAO, ALTURA_COLISAO)
+                personagem_x = bloco.right
+            collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
 
     camera_x = max(0, personagem_x - 200)
     char1_x = personagem_x - camera_x
@@ -149,30 +144,32 @@ while True:
     velocidadechar1_y += gravidade
     char1_y += velocidadechar1_y
 
-    # COLISAO VERTICAL (depois)
+    #colisão vertical
     no_chao = False
-    collider_personagem = pygame.Rect(int(personagem_x + DESLOCAMENTO_X_COLISAO), int(char1_y), LARGURA_COLISAO, ALTURA_COLISAO)
+    collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
     caixa_checagem = collider_personagem.inflate(0, 4)  # um pouco maior, pra contar "encostando" como colisao
     for bloco in collider_list:
         if caixa_checagem.colliderect(bloco):
             if velocidadechar1_y >= 0:
-                char1_y = bloco.top - ALTURA_COLISAO
+                char1_y = bloco.top - personagem_parado.get_height()
                 velocidadechar1_y = 0
                 no_chao = True
             elif velocidadechar1_y < 0:
                 char1_y = bloco.bottom
                 velocidadechar1_y = 0
-            collider_personagem = pygame.Rect(int(personagem_x + DESLOCAMENTO_X_COLISAO), int(char1_y), LARGURA_COLISAO, ALTURA_COLISAO)
+            collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
             caixa_checagem = collider_personagem.inflate(0, 4)
 
     if teclas[pygame.K_SPACE] and no_chao:
         velocidadechar1_y = forca_pulo
 
     # animacao do personagem
+    deslocamento_x_pulo = 0
     deslocamento_y_pulo = 0
     if not no_chao:
-        imagem_atual = frames_pular[3]   # frame fixo enquanto no ar
-        deslocamento_y_pulo = -11
+        imagem_atual = frames_pular[3]   
+        deslocamento_y_pulo = -63
+        deslocamento_x_pulo = -18
     elif movendo and no_chao:
         contador_frames += 1
         if contador_frames >= INTERVALO_FRAME:
@@ -210,6 +207,6 @@ while True:
             elif cel == 'P':
                 screen.blit(t_topo, (x, y))
 
-    screen.blit(imagem_atual, (char1_x, char1_y + deslocamento_y_pulo))
+    screen.blit(imagem_atual, (char1_x + deslocamento_x_pulo, char1_y + deslocamento_y_pulo))
 
     pygame.display.update()
