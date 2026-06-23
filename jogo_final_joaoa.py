@@ -7,43 +7,43 @@ clock = pygame.time.Clock()
 
 #spritesheet
 spritesheet_andar = pygame.image.load('Characters/spritesheet_andar.png').convert_alpha()
-LARGURA_TOTAL = spritesheet_andar.get_width()
-FRAME_H = spritesheet_andar.get_height()
-ESCALA = 0.64
+largura_total = spritesheet_andar.get_width()
+frame_h = spritesheet_andar.get_height()
+escala = 0.64
 
-NUM_FRAMES = 7
-frame_w_fixo = LARGURA_TOTAL // NUM_FRAMES
+num_frames = 7
+frame_w_fixo = largura_total // num_frames
 
 frames_andar = []
-for i in range(NUM_FRAMES):
+for i in range(num_frames):
     x_inicio = i * frame_w_fixo
-    frame = pygame.Surface((frame_w_fixo, FRAME_H), pygame.SRCALPHA)
-    frame.blit(spritesheet_andar, (0, 0), (x_inicio, 0, frame_w_fixo, FRAME_H))
-    frame = pygame.transform.scale(frame, (int(frame_w_fixo * ESCALA), int(FRAME_H * ESCALA)))
+    frame = pygame.Surface((frame_w_fixo, frame_h), pygame.SRCALPHA)
+    frame.blit(spritesheet_andar, (0, 0), (x_inicio, 0, frame_w_fixo, frame_h))
+    frame = pygame.transform.scale(frame, (int(frame_w_fixo * escala), int(frame_h * escala)))
     frames_andar.append(frame)
 
 personagem_parado = frames_andar[0]
 
 #spritesheet de pulo
 spritesheet_pular = pygame.image.load('Characters/spritesheet_pular.png').convert_alpha()
-LARGURA_TOTAL_PULAR = spritesheet_pular.get_width()
-FRAME_H_PULAR = spritesheet_pular.get_height()
-ESCALA_PULAR = 0.40
+largura_pular = spritesheet_pular.get_width()
+frame_h_pular = spritesheet_pular.get_height()
+escala_pular = 0.40
 
-NUM_FRAMES_PULAR = 7
-frame_w_fixo_pular = LARGURA_TOTAL_PULAR // NUM_FRAMES_PULAR
+num_frames_pular = 7
+frame_w_fixo_pular = largura_pular // num_frames_pular
 
 frames_pular = []
-for i in range(NUM_FRAMES_PULAR):
+for i in range(num_frames_pular):
     x_inicio = i * frame_w_fixo_pular
-    frame = pygame.Surface((frame_w_fixo_pular, FRAME_H_PULAR), pygame.SRCALPHA)
-    frame.blit(spritesheet_pular, (0, 0), (x_inicio, 0, frame_w_fixo_pular, FRAME_H_PULAR))
-    frame = pygame.transform.scale(frame, (int(frame_w_fixo_pular * ESCALA_PULAR), int(FRAME_H_PULAR * ESCALA_PULAR)))
+    frame = pygame.Surface((frame_w_fixo_pular, frame_h_pular), pygame.SRCALPHA)
+    frame.blit(spritesheet_pular, (0, 0), (x_inicio, 0, frame_w_fixo_pular, frame_h_pular))
+    frame = pygame.transform.scale(frame, (int(frame_w_fixo_pular * escala_pular), int(frame_h_pular * escala_pular)))
     frames_pular.append(frame)
 
 frame_atual = 0
 contador_frames = 0
-INTERVALO_FRAME = 9
+intervalo_frame = 9
 
 #background
 camadas = []
@@ -66,7 +66,7 @@ def get_tile(col, lin):
 t_topo = get_tile(1, 0) 
 t_fill = get_tile(1, 4)  
 
-MAPA = [
+mapa = [
     "                                                             ",
     "                                                             ",
     "                                                             ",
@@ -82,15 +82,15 @@ MAPA = [
     "DDDDDDDDDD  DDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDD",
 ]
 
-LARGURA_MAPA = max(len(linha) for linha in MAPA)
-MAPA = [linha.ljust(LARGURA_MAPA) for linha in MAPA]
+largura_mapa = max(len(linha) for linha in mapa)
+mapa = [linha.ljust(largura_mapa) for linha in mapa]
 
 collider_list = []
-for i in range(len(MAPA)):
-    for j in range(len(MAPA[i])):
-        if MAPA[i][j] == "C" or MAPA[i][j] == "P":
+for i in range(len(mapa)):
+    for j in range(len(mapa[i])):
+        if mapa[i][j] == "C" or mapa[i][j] == "P":
             collider_list.append(pygame.Rect(j * TILE, i * TILE + 32, TILE, TILE - 32))
-        elif MAPA[i][j] == "D":
+        elif mapa[i][j] == "D":
             collider_list.append(pygame.Rect(j * TILE, i * TILE, TILE, TILE))
 
 #movimentação do personagem
@@ -147,7 +147,7 @@ while True:
     #colisão vertical
     no_chao = False
     collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
-    caixa_checagem = collider_personagem.inflate(0, 4)  # um pouco maior, pra contar "encostando" como colisao
+    caixa_checagem = collider_personagem.inflate(0, 4) 
     for bloco in collider_list:
         if caixa_checagem.colliderect(bloco):
             if velocidadechar1_y >= 0:
@@ -172,7 +172,7 @@ while True:
         deslocamento_x_pulo = -18
     elif movendo and no_chao:
         contador_frames += 1
-        if contador_frames >= INTERVALO_FRAME:
+        if contador_frames >= intervalo_frame:
             contador_frames = 0
             frame_atual = (frame_atual + 1) % len(frames_andar)
         imagem_atual = frames_andar[frame_atual]
@@ -195,9 +195,9 @@ while True:
     colunas_finais = 1280 // TILE + 2
 
     for col_tela in range(colunas_finais):
-        col_mapa = (coluna_inicial + col_tela) % LARGURA_MAPA
+        col_mapa = (coluna_inicial + col_tela) % largura_mapa
         x = (coluna_inicial + col_tela) * TILE - int(camera_x)
-        for i, linha in enumerate(MAPA):
+        for i, linha in enumerate(mapa):
             cel = linha[col_mapa]
             y = i * TILE
             if cel == 'C':
