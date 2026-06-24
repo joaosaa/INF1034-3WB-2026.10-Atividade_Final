@@ -96,7 +96,7 @@ for i in range(len(mapa)):
 #movimentação do personagem
 personagem_x = 200 
 camera_x = 0.0
-char1_y = 403
+char1_y = 407
 velocidadechar1_y = 0
 gravidade = 0.8
 forca_pulo = -15
@@ -147,23 +147,21 @@ while True:
     #colisão vertical
     no_chao = False
     collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
-    caixa_checagem = collider_personagem.inflate(0, 4) 
+    encostando = pygame.Rect(collider_personagem.x, collider_personagem.y, collider_personagem.width, collider_personagem.height + 4)
     for bloco in collider_list:
-        if caixa_checagem.colliderect(bloco):
-            if velocidadechar1_y >= 0:
+        if encostando.colliderect(bloco):
+            if velocidadechar1_y >= 0 and collider_personagem.top < bloco.top:
                 char1_y = bloco.top - personagem_parado.get_height()
                 velocidadechar1_y = 0
                 no_chao = True
-            elif velocidadechar1_y < 0:
+            else:
                 char1_y = bloco.bottom
                 velocidadechar1_y = 0
-            collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
-            caixa_checagem = collider_personagem.inflate(0, 4)
 
     if teclas[pygame.K_SPACE] and no_chao:
         velocidadechar1_y = forca_pulo
 
-    # animacao do personagem
+    # animação do personagem
     deslocamento_x_pulo = 0
     deslocamento_y_pulo = 0
     if not no_chao:
