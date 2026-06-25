@@ -2,6 +2,7 @@ import pygame, sys
 
 pygame.init()
 pygame.mixer.init()
+pygame.display.set_caption("Deepstrand")
 
 pygame.mixer.music.load("sounds/TRILHA SONORA/Soundtrack.mp3")
 pygame.mixer.music.set_volume(0.090)
