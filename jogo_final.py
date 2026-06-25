@@ -23,8 +23,69 @@ def atualizar_sistema_sonoro(jogador_movendo):
     else:
         canal_passos.stop()
 
+
+# SISTEMA DE HUD, PONTUAÇÃO E REGRAS (LUIGI)
+
+pygame.font.init()
+fonte_hud = pygame.font.SysFont("courier", 35, bold=True)
+fonte_telas = pygame.font.SysFont("courier", 90, bold=True)
+
+pontuacao = 0
+coracoes = 3
+vida_atual = 100
+vida_maxima = 100
+
+estado_jogo = "JOGANDO"
+limite_vitoria_x = 3500 
+boss_morto = False 
+tempo_queda = 0 
+
+# IMAGEM BOLHA (LUIGI)
+img_bolha = pygame.image.load("coracao bolha.png")
+img_bolha = pygame.transform.scale(img_bolha, (30, 30)) 
+img_bolha.set_colorkey((255, 255, 255)) 
+
+
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
+
+#inimigos
+inimigo1_img = pygame.image.load('Characters/char2.png')
+inimigo1_img = pygame.transform.scale(inimigo1_img, (120, 120))
+
+inimigo2_img = pygame.image.load('Characters/char3.png')
+inimigo2_img = pygame.transform.scale(inimigo2_img, (140, 140))
+
+inimigo3_img = pygame.image.load('Characters/char4.png')
+inimigo3_img = pygame.transform.scale(inimigo3_img, (160, 160))
+
+inimigos = [{
+        "x": 700,
+        "y": 460,
+        "inicio": 700,
+        "fim": 875,
+        "vel": 2,
+        "dir": 1,
+        "imagem": inimigo1_img
+    },
+    {
+        "x": 1100,
+        "y": 440,
+        "inicio": 1100,
+        "fim": 1500,
+        "vel": 2,
+        "dir": -1,
+        "imagem": inimigo2_img
+    },
+    {
+        "x": 1600,
+        "y": 420,
+        "inicio": 1600,
+        "fim": 2000,
+        "vel": 3,
+        "dir": 1,
+        "imagem": inimigo3_img
+    }]
 
 #spritesheet
 spritesheet_andar = pygame.image.load('Characters/spritesheet_andar.png').convert_alpha()
@@ -135,15 +196,73 @@ while True:
 
     teclas = pygame.key.get_pressed()
     movendo = False
-    if teclas[pygame.K_d]:
-        personagem_x += 300 * dt / 1000 
-        virado_direita = True
-        movendo = True
 
-    if teclas[pygame.K_a]:
-        personagem_x -= 300 * dt / 1000
-        virado_direita = False
-        movendo = True
+    
+    # LÓGICA DE TEMPORIZADOR DE QUEDA (LUIGI)
+    
+    if estado_jogo == "TELA_QUEDA":
+        if pygame.time.get_ticks() - tempo_queda > 2000:
+            estado_jogo = "JOGANDO"
+            personagem_x = 200
+            char1_y = 100
+            velocidadechar1_y = 0
+
+    
+    # LÓGICA DE DANO, QUEDA E FIM DE JOGO (LUIGI)
+    
+    if estado_jogo == "JOGANDO":
+        
+        # 1. checa queda no precipicio
+        if char1_y > 800:
+            coracoes -= 1
+            pontuacao -= 50
+            vida_atual = vida_maxima
+            if pontuacao < 0: pontuacao = 0 
+
+            if coracoes <= 0:
+                estado_jogo = "DERROTA"
+                pontuacao = 0 
+            else:
+                estado_jogo = "TELA_QUEDA"
+                tempo_queda = pygame.time.get_ticks()
+
+        # 2. checa se a barra de vida zerou por dano dos inimigos
+        if vida_atual <= 0:
+            coracoes -= 1
+            pontuacao -= 50
+            vida_atual = vida_maxima 
+            if pontuacao < 0: pontuacao = 0 
+
+        # 3. chega game over (0 coracoes)
+        if coracoes <= 0:
+            estado_jogo = "DERROTA"
+            pontuacao = 0 
+
+        # 4. checa vitoria
+        elif personagem_x >= limite_vitoria_x:
+            estado_jogo = "VITORIA"
+            if coracoes == 3 and boss_morto:
+                pontuacao += 300 
+
+        # so permite movimentação se o jogo estiver rodando
+        if teclas[pygame.K_d]:
+            personagem_x += 300 * dt / 1000 
+            virado_direita = True
+            movendo = True
+
+        if teclas[pygame.K_a]:
+            personagem_x -= 300 * dt / 1000
+            virado_direita = False
+            movendo = True
+
+        for inimigo in inimigos:
+            inimigo["x"] += inimigo["vel"] * inimigo["dir"]
+
+            if inimigo["x"] >= inimigo["fim"]:
+                inimigo["dir"] = -1
+
+            if inimigo["x"] <= inimigo["inicio"]:
+                inimigo["dir"] = 1
 
     personagem_x = max(0, personagem_x) 
 
@@ -177,7 +296,7 @@ while True:
                 char1_y = bloco.top - personagem_parado.get_height()
                 velocidadechar1_y = 0
                 no_chao = True
-                if estava_no_ar:
+                if estava_no_ar and estado_jogo == "JOGANDO":
                     som_aterrissagem.play()
             else:
                 char1_y = bloco.bottom
@@ -185,11 +304,14 @@ while True:
             collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
             encostando = pygame.Rect(collider_personagem.x, collider_personagem.y, collider_personagem.width, collider_personagem.height + 4)
 
-    if teclas[pygame.K_SPACE] and no_chao:
+    if estado_jogo == "JOGANDO" and teclas[pygame.K_SPACE] and no_chao:
         velocidadechar1_y = forca_pulo
         som_pulo.play()
 
-    atualizar_sistema_sonoro(movendo and no_chao)
+    if estado_jogo != "JOGANDO" and estado_jogo != "TELA_QUEDA":
+        canal_passos.stop()
+    else:
+        atualizar_sistema_sonoro(movendo and no_chao)
 
     # animacao do personagem
     deslocamento_x_pulo = 0
@@ -214,27 +336,62 @@ while True:
 
     screen.fill((3, 18, 15))
 
-    for i, camada in enumerate(camadas):
-        deslocamento = int(camera_x * velocidades[i]) % 1280
-        screen.blit(camada, (-deslocamento, 0))
-        screen.blit(camada, (1280 - deslocamento, 0))
+    if estado_jogo != "TELA_QUEDA":
+        for i, camada in enumerate(camadas):
+            deslocamento = int(camera_x * velocidades[i]) % 1280
+            screen.blit(camada, (-deslocamento, 0))
+            screen.blit(camada, (1280 - deslocamento, 0))
 
-    coluna_inicial = int(camera_x // TILE)
-    colunas_finais = 1280 // TILE + 2
+        coluna_inicial = int(camera_x // TILE)
+        colunas_finais = 1280 // TILE + 2
 
-    for col_tela in range(colunas_finais):
-        col_mapa = (coluna_inicial + col_tela) % largura_mapa
-        x = (coluna_inicial + col_tela) * TILE - int(camera_x)
-        for i, linha in enumerate(mapa):
-            cel = linha[col_mapa]
-            y = i * TILE
-            if cel == 'C':
-                screen.blit(t_topo, (x, y))
-            elif cel == 'D':
-                screen.blit(t_fill, (x, y))
-            elif cel == 'P':
-                screen.blit(t_topo, (x, y))
+        for col_tela in range(colunas_finais):
+            col_mapa = (coluna_inicial + col_tela) % largura_mapa
+            x = (coluna_inicial + col_tela) * TILE - int(camera_x)
+            for i, linha in enumerate(mapa):
+                cel = linha[col_mapa]
+                y = i * TILE
+                if cel == 'C':
+                    screen.blit(t_topo, (x, y))
+                elif cel == 'D':
+                    screen.blit(t_fill, (x, y))
+                elif cel == 'P':
+                    screen.blit(t_topo, (x, y))
 
-    screen.blit(imagem_atual, (char1_x + deslocamento_x_pulo, char1_y + deslocamento_y_pulo))
+        for inimigo in inimigos:
+            img = inimigo["imagem"]
+            screen.blit(img, (inimigo['x'] - camera_x, inimigo['y']))
+
+        screen.blit(imagem_atual, (char1_x + deslocamento_x_pulo, char1_y + deslocamento_y_pulo))
+
+    
+    # DESENHO DA INTERFACE (HUD) E TELAS FINAIS (LUIGI)
+    
+    if estado_jogo == "JOGANDO":
+        for i in range(coracoes):
+            screen.blit(img_bolha, (20 + (i * 35), 20)) 
+        
+        pygame.draw.rect(screen, (255, 215, 0), (18, 68, 204, 24), 3) 
+        pygame.draw.rect(screen, (0, 105, 148), (20, 70, vida_atual * 2, 20)) 
+
+        texto_pontos = fonte_hud.render(f"Pontuação: {pontuacao}", True, (255, 215, 0))
+        pos_x_pontos = 1280 - texto_pontos.get_width() - 30 
+        screen.blit(texto_pontos, (pos_x_pontos, 20))
+
+    elif estado_jogo == "TELA_QUEDA":
+        texto_afogou = fonte_telas.render("VOCÊ MORREU!", True, (255, 0, 0))
+        screen.blit(texto_afogou, (1280//2 - texto_afogou.get_width()//2, 720//2))
+        
+    elif estado_jogo == "DERROTA":
+        texto_derrota = fonte_telas.render("GAME OVER", True, (255, 0, 0))
+        screen.blit(texto_derrota, (1280//2 - texto_derrota.get_width()//2, 720//2))
+        
+    elif estado_jogo == "VITORIA":
+        texto_vitoria = fonte_telas.render("VOCÊ VENCEU!", True, (0, 255, 0))
+        screen.blit(texto_vitoria, (1280//2 - texto_vitoria.get_width()//2, 720//2))
+        
+        texto_bonus = fonte_hud.render(f"Pontuação Final: {pontuacao}", True, (255, 215, 0))
+        screen.blit(texto_bonus, (1280//2 - texto_bonus.get_width()//2, 720//2 + 80))
+    
 
     pygame.display.update()
