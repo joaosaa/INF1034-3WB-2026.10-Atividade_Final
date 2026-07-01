@@ -106,8 +106,10 @@ inimigos = [{
         "fim": 875,
         "vel": 2,
         "dir": 1,
-        "imagem": inimigo1_img
-    },
+        "imagem": inimigo1_img,
+        "hitbox": pygame.Rect(0,0,80,100),
+        "vivo": True
+    }, 
     {
         "x": 1100,
         "y": 440,
@@ -115,7 +117,9 @@ inimigos = [{
         "fim": 1500,
         "vel": 2,
         "dir": -1,
-        "imagem": inimigo2_img
+        "imagem": inimigo2_img,
+        "hitbox": pygame.Rect(0,0,90,110),
+        "vivo": True
     },
     {
         "x": 1600,
@@ -124,7 +128,9 @@ inimigos = [{
         "fim": 2000,
         "vel": 3,
         "dir": 1,
-        "imagem": inimigo3_img
+        "imagem": inimigo3_img,
+        "hitbox": pygame.Rect(0,0,110,130),
+        "vivo": True
     }]
 
 while True:
@@ -150,6 +156,9 @@ while True:
     for inimigo in inimigos:
 
      inimigo["x"] += inimigo["vel"] * inimigo["dir"]
+     
+     inimigo["hitbox"].x = inimigo["x"] + 20
+     inimigo["hitbox"].y = inimigo["y"] + 10
 
 
      if inimigo["x"] >= inimigo["fim"]:
@@ -206,6 +215,23 @@ while True:
 
     if teclas[pygame.K_SPACE] and no_chao:
         velocidadechar1_y = forca_pulo
+    
+    # colisão personagem com inimigos
+
+    for inimigo in inimigos:
+      if not inimigo ['vivo']:
+          continue
+      
+      if collider_personagem.colliderect(inimigo["hitbox"]):
+         if velocidadechar1_y > 0 and collider_personagem.bottom < inimigo["hitbox"].top + 30:
+
+             inimigo["vivo"] = False
+             velocidadechar1_y = -10
+         else:
+           if collider_personagem.centerx < inimigo["hitbox"].centerx:
+             personagem_x = inimigo["hitbox"].left - personagem_parado.get_width()
+           else:
+              personagem_x = inimigo["hitbox"].right
 
     # animação do personagem
     deslocamento_x_pulo = 0
@@ -255,8 +281,9 @@ while True:
                 collider_list.append(pygame.Rect(j * TILE, i * TILE + 32, TILE, TILE - 32))
     
     for inimigo in inimigos:
-      img = inimigo["imagem"]
-      screen.blit(img, (inimigo['x'] - camera_x, inimigo['y']))
+      if inimigo["vivo"]:
+         img = inimigo["imagem"]
+         screen.blit(img, (inimigo['x'] - camera_x, inimigo['y']))
 
 
 
