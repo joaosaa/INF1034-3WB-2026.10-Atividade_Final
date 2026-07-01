@@ -124,12 +124,13 @@ inimigos = [{
         "frames": frames_caranguejo,
         "frame_atual": 0,
         "contador": 0,
-        "hitbox": pygame.Rect(0,0,75,25),
+        "hitbox": pygame.Rect(0,0,75,30),
+        "offset_y": 130,
         "vivo": True
     }, 
     {
         "x": 1100,
-        "y": 315,
+        "y": 485,
         "inicio": 1100,
         "fim": 1500,
         "vel": 2,
@@ -138,7 +139,8 @@ inimigos = [{
         "frames": frames_lagosta,
         "frame_atual": 0,
         "contador": 0,
-        "hitbox": pygame.Rect(0,0,75,25),
+        "hitbox": pygame.Rect(0,0,108,25),
+        "offset_y": 0,
         "vivo": True
     }]
 
@@ -174,7 +176,7 @@ while True:
                 inimigo["imagem"] = inimigo["frames"][inimigo["frame_atual"]]
         
         inimigo["hitbox"].x = inimigo["x"] + 2
-        inimigo["hitbox"].y = inimigo["y"] + 130
+        inimigo["hitbox"].y = inimigo["y"] + inimigo["offset_y"]
 
         if inimigo["x"] >= inimigo["fim"]:
             inimigo["dir"] = -1
@@ -290,7 +292,10 @@ while True:
 
     for inimigo in inimigos:
         if inimigo["vivo"]:
-            screen.blit(inimigo["imagem"], (inimigo['x'] - camera_x, inimigo['y']))
+            img = inimigo["imagem"]
+            if inimigo["dir"] == 1:
+                img = pygame.transform.flip(img, True, False)
+            screen.blit(img, (inimigo['x'] - camera_x, inimigo['y']))
 
     screen.blit(imagem_atual, (char1_x + deslocamento_x_pulo, char1_y + deslocamento_y_pulo))
 
