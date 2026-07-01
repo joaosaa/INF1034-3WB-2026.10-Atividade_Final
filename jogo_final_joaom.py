@@ -292,7 +292,10 @@ while True:
 
     for inimigo in inimigos:
         if inimigo["vivo"]:
-            screen.blit(inimigo["imagem"], (inimigo['x'] - camera_x, inimigo['y']))
+            img = inimigo["imagem"]
+            if inimigo["dir"] == 1:
+                img = pygame.transform.flip(img, True, False)
+            screen.blit(img, (inimigo['x'] - camera_x, inimigo['y']))
 
     screen.blit(imagem_atual, (char1_x + deslocamento_x_pulo, char1_y + deslocamento_y_pulo))
 
