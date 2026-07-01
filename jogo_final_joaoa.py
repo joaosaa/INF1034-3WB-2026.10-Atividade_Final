@@ -64,17 +64,18 @@ def get_tile(col, lin):
     return pygame.transform.scale(tile, (TILE, TILE))
 
 t_topo = get_tile(1, 0) 
-t_fill = get_tile(1, 4)  
+t_fill = get_tile(1, 4)
+t_diamante = get_tile(1, 10)
 
 mapa = [
     "                                                             ",
     "                                                             ",
     "                                                             ",
-    "                                                             ",
+    "          G              G                    G              ",
     "                                                             ",
     "                          PPP                                ",
     "                PP     PP                 PPP        PPP     ",
-    "                                   PP                        ",
+    "           G                       PP              G         ",
     "CCCCCCCCCC  CCC   CCCCCCCCCCCCCCC       CCCCCCCCCCCCCCCCCCCC",
     "DDDDDDDDDD  DDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDD",
     "DDDDDDDDDD  DDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDD",
@@ -84,6 +85,8 @@ mapa = [
 
 largura_mapa = max(len(linha) for linha in mapa)
 mapa = [linha.ljust(largura_mapa) for linha in mapa]
+
+diamantes_coletados = set()
 
 #movimentação do personagem
 personagem_x = 200 
@@ -167,6 +170,14 @@ while True:
     if teclas[pygame.K_SPACE] and no_chao:
         velocidadechar1_y = forca_pulo
 
+    # coleta de diamantes
+    for i, linha in enumerate(mapa):
+        for j, cel in enumerate(linha):
+            if cel == 'G' and (j, i) not in diamantes_coletados:
+                rect_diamante = pygame.Rect(j * TILE, i * TILE, TILE, TILE)
+                if collider_personagem.colliderect(rect_diamante):
+                    diamantes_coletados.add((j, i))
+
     # animação do personagem
     deslocamento_x_pulo = 0
     deslocamento_y_pulo = 0
@@ -207,6 +218,8 @@ while True:
                 screen.blit(t_fill, (x, y))
             elif cel == 'P':
                 screen.blit(t_topo, (x, y))
+            elif cel == 'G' and (col_mapa, i) not in diamantes_coletados:
+                screen.blit(t_diamante, (x, y))
 
     screen.blit(imagem_atual, (char1_x + deslocamento_x_pulo, char1_y + deslocamento_y_pulo))
 
