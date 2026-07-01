@@ -4,6 +4,9 @@ pygame.init()
 pygame.mixer.init()
 pygame.display.set_caption("Deepstrand")
 
+# 1 # Criando variável global para controle de dano
+tempo_ultimo_dano = 0
+
 pygame.mixer.music.load("sounds/TRILHA SONORA/Soundtrack.mp3")
 pygame.mixer.music.set_volume(0.090)
 pygame.mixer.music.play(-1)
@@ -204,14 +207,14 @@ t_topo = get_tile(1, 0)
 t_fill = get_tile(1, 4)
 
 mapa = [
-    "                                                             ",
-    "                                                             ",
-    "                                                             ",
-    "                                                             ",
-    "                                                             ",
-    "                          PPP                                ",
-    "                PP     PP                 PPP        PPP     ",
-    "                                   PP                        ",
+    "                                                                ",
+    "                                                                ",
+    "                                                                ",
+    "                                                                ",
+    "                                                                ",
+    "                           PPP                                  ",
+    "                PP    PP                PPP           PPP       ",
+    "                                PP                              ",
     "CCCCCCCCCC  CCC   CCCCCCCCCCCCCCC       CCCCCCCCCCCCCCCCCCCC",
     "DDDDDDDDDD  DDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDD",
     "DDDDDDDDDD  DDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDD",
@@ -331,8 +334,10 @@ while True:
         if pygame.time.get_ticks() - tempo_queda > 2000:
             estado_jogo = "JOGANDO"
             personagem_x = 200
-            char1_y = 100
+            char1_y = 407 # 3 # Corrigido Y para o personagem nascer no chão
             velocidadechar1_y = 0
+            vida_atual = vida_maxima # 4 # Reseta vida
+            tempo_ultimo_dano = pygame.time.get_ticks() # 4 # Invulnerabilidade inicial
             for inimigo in inimigos:
                 inimigo["x"] = inimigo["inicio"]
                 inimigo["dir"] = 1
@@ -359,6 +364,12 @@ while True:
             vida_atual = vida_maxima
             if pontuacao < 0:
                 pontuacao = 0
+            if coracoes <= 0:
+                estado_jogo = "DERROTA"
+                pontuacao = 0
+            else: # 4 # Corrigido para mandar para TELA_QUEDA ao morrer
+                estado_jogo = "TELA_QUEDA"
+                tempo_queda = pygame.time.get_ticks()
 
         if coracoes <= 0:
             estado_jogo = "DERROTA"
@@ -438,10 +449,14 @@ while True:
                     pontuacao += 100
                     velocidadechar1_y = -10
                 else:
-                    if collider_personagem.centerx < inimigo["hitbox"].centerx:
-                        personagem_x = inimigo["hitbox"].left - personagem_parado.get_width()
-                    else:
-                        personagem_x = inimigo["hitbox"].right
+                    # 2 # Lógica de Dano com cooldown de 1 segundo
+                    tempo_atual = pygame.time.get_ticks()
+                    if tempo_atual - tempo_ultimo_dano > 1000:
+                        vida_atual -= 25
+                        tempo_ultimo_dano = tempo_atual
+                        velocidadechar1_y = -5
+                        personagem_x -= 40 if virado_direita else -40
+                    
                     collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
 
     camera_x = max(0, personagem_x - 200)
