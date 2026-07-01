@@ -121,7 +121,7 @@ while True:
     char1_x = personagem_x - camera_x  
 
     coluna_inicial = int(camera_x // TILE)
-    colunas_finais = 1280 // TILE 
+    colunas_finais = 1280 // TILE + 2
 
     collider_list = []
     for col_tela in range(colunas_finais):
