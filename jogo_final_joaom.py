@@ -5,12 +5,6 @@ pygame.init()
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 
-inimigo2_img = pygame.image.load('Characters/char3.png')
-inimigo2_img = pygame.transform.scale(inimigo2_img, (140, 140))
-
-inimigo3_img = pygame.image.load('Characters/char4.png')
-inimigo3_img = pygame.transform.scale(inimigo3_img, (160, 160))
-
 #spritesheet
 spritesheet_andar = pygame.image.load('Characters/spritesheet_andar.png').convert_alpha()
 largura_total = spritesheet_andar.get_width()
@@ -64,6 +58,20 @@ for i in range(num_frames_caranguejo):
     frame.blit(spritesheet_caranguejo, (0,0),(i * frame_w_caranguejo, 0, frame_w_caranguejo, altura_caranguejo))
     frame = pygame.transform.scale(frame,(int(frame_w_caranguejo * 0.35), int(altura_caranguejo * 0.35)))
     frames_caranguejo.append(frame)
+
+# spritesheet lagosta
+spritesheet_lagosta = pygame.image.load('Characters/lagosta.png').convert_alpha()
+largura_lagosta = spritesheet_lagosta.get_width()
+altura_lagosta = spritesheet_lagosta.get_height()
+num_frames_lagosta = 7
+frame_w_lagosta = largura_lagosta // num_frames_lagosta
+frames_lagosta = []
+for i in range(num_frames_lagosta):
+    x_inicio = i * frame_w_lagosta
+    frame = pygame.Surface((frame_w_lagosta, altura_lagosta), pygame.SRCALPHA)
+    frame.blit(spritesheet_lagosta,(0,0),(x_inicio, 0, frame_w_lagosta, altura_lagosta))
+    frame = pygame.transform.scale(frame, (int(frame_w_lagosta * 0.45), int(altura_lagosta * 0.45)))
+    frames_lagosta.append(frame)
 
 #background
 camadas = []
@@ -121,24 +129,16 @@ inimigos = [{
     }, 
     {
         "x": 1100,
-        "y": 440,
+        "y": 315,
         "inicio": 1100,
         "fim": 1500,
         "vel": 2,
         "dir": -1,
-        "imagem": inimigo2_img,
-        "hitbox": pygame.Rect(0,0,90,110),
-        "vivo": True
-    },
-    {
-        "x": 1600,
-        "y": 420,
-        "inicio": 1600,
-        "fim": 2000,
-        "vel": 3,
-        "dir": 1,
-        "imagem": inimigo3_img,
-        "hitbox": pygame.Rect(0,0,110,130),
+        "imagem": frames_lagosta[0],
+        "frames": frames_lagosta,
+        "frame_atual": 0,
+        "contador": 0,
+        "hitbox": pygame.Rect(0,0,75,25),
         "vivo": True
     }]
 
