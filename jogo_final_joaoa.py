@@ -85,7 +85,6 @@ mapa = [
 largura_mapa = max(len(linha) for linha in mapa)
 mapa = [linha.ljust(largura_mapa) for linha in mapa]
 
-
 #movimentação do personagem
 personagem_x = 200 
 camera_x = 0.0
@@ -121,13 +120,19 @@ while True:
     camera_x = max(0, personagem_x - 200)
     char1_x = personagem_x - camera_x  
 
+    coluna_inicial = int(camera_x // TILE)
+    colunas_finais = 1280 // TILE + 2
+
     collider_list = []
-    for i in range(len(mapa)):
-        for j in range(len(mapa[i])):
-            if mapa[i][j] == "C" or mapa[i][j] == "P":
-                collider_list.append(pygame.Rect(j * TILE, i * TILE + 32, TILE, TILE - 32))
-            elif mapa[i][j] == "D":
-                collider_list.append(pygame.Rect(j * TILE, i * TILE, TILE, TILE))
+    for col_tela in range(colunas_finais):
+        col_mapa = (coluna_inicial + col_tela) % largura_mapa
+        for i, linha in enumerate(mapa):
+            cel = linha[col_mapa]
+            y = i * TILE
+            if cel == 'C' or cel == 'P':
+                collider_list.append(pygame.Rect((coluna_inicial + col_tela) * TILE, y + 32, TILE, TILE - 32))
+            elif cel == 'D':
+                collider_list.append(pygame.Rect((coluna_inicial + col_tela) * TILE, y, TILE, TILE))
 
     #colisão horizontal
     collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
@@ -190,9 +195,6 @@ while True:
         screen.blit(camada, (-deslocamento, 0))
         screen.blit(camada, (1280 - deslocamento, 0))
 
-    coluna_inicial = int(camera_x // TILE)
-    colunas_finais = 1280 // TILE + 2
-
     for col_tela in range(colunas_finais):
         col_mapa = (coluna_inicial + col_tela) % largura_mapa
         x = (coluna_inicial + col_tela) * TILE - int(camera_x)
@@ -201,13 +203,10 @@ while True:
             y = i * TILE
             if cel == 'C':
                 screen.blit(t_topo, (x, y))
-                collider_list.append(pygame.Rect(j * TILE, i * TILE + 32, TILE, TILE - 32))
             elif cel == 'D':
                 screen.blit(t_fill, (x, y))
-                collider_list.append(pygame.Rect(j * TILE, i * TILE, TILE, TILE))
             elif cel == 'P':
-                screen.blit(t_topo, (x, y))   
-                collider_list.append(pygame.Rect(j * TILE, i * TILE + 32, TILE, TILE - 32))
+                screen.blit(t_topo, (x, y))
 
     screen.blit(imagem_atual, (char1_x + deslocamento_x_pulo, char1_y + deslocamento_y_pulo))
 
