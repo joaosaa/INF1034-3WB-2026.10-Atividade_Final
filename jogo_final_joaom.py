@@ -12,7 +12,6 @@ inimigo3_img = pygame.image.load('Characters/char4.png')
 inimigo3_img = pygame.transform.scale(inimigo3_img, (160, 160))
 
 #spritesheet
-
 spritesheet_andar = pygame.image.load('Characters/spritesheet_andar.png').convert_alpha()
 largura_total = spritesheet_andar.get_width()
 frame_h = spritesheet_andar.get_height()
@@ -54,23 +53,15 @@ intervalo_frame = 9
 
 # spritesheet caranguejo
 spritesheet_caranguejo = pygame.image.load('Characters/caranguejo.png').convert_alpha()
-
 largura_caranguejo = spritesheet_caranguejo.get_width()
 altura_caranguejo = spritesheet_caranguejo.get_height()
-
 num_frames_caranguejo = 7
-
 frame_w_caranguejo = largura_caranguejo // num_frames_caranguejo
 
-
 frames_caranguejo = []
-
-
 for i in range(num_frames_caranguejo):
     frame = pygame.Surface((frame_w_caranguejo, altura_caranguejo), pygame.SRCALPHA)
-
-    frame.blit(spritesheet_caranguejo, (0,0),(i * frame_w_caranguejo, 0 ,frame_w_caranguejo,altura_caranguejo))
-
+    frame.blit(spritesheet_caranguejo, (0,0),(i * frame_w_caranguejo, 0, frame_w_caranguejo, altura_caranguejo))
     frame = pygame.transform.scale(frame,(int(frame_w_caranguejo * 0.35), int(altura_caranguejo * 0.35)))
     frames_caranguejo.append(frame)
 
@@ -96,17 +87,12 @@ t_topo = get_tile(1, 0)
 t_fill = get_tile(1, 4)  
 
 arquivo = open("mapa.txt", "r")
-
 mapa = arquivo.readlines()
-
 arquivo.close()
 
-
 mapa = [linha.strip("\n") for linha in mapa]
-
 largura_mapa = max(len(linha) for linha in mapa)
 mapa = [linha.ljust(largura_mapa) for linha in mapa]
-
 
 #movimentação do personagem
 personagem_x = 200 
@@ -122,7 +108,7 @@ virado_direita = True
 inimigos = [{
         "x": 750,
         "y": 377,
-        "inicio":750,
+        "inicio": 750,
         "fim": 890,
         "vel": 2,
         "dir": 1,
@@ -130,7 +116,7 @@ inimigos = [{
         "frames": frames_caranguejo,
         "frame_atual": 0,
         "contador": 0,
-        "hitbox": pygame.Rect(0,0,45,15),
+        "hitbox": pygame.Rect(0,0,75,25),
         "vivo": True
     }, 
     {
@@ -177,48 +163,42 @@ while True:
         movendo = True
     
     for inimigo in inimigos:
+        inimigo["x"] += inimigo["vel"] * inimigo["dir"]
+        if "frames" in inimigo:
+            inimigo["contador"] += 1
+            if inimigo["contador"] >= 8:
+                inimigo["contador"] = 0
+                inimigo["frame_atual"] += 1
+                if inimigo["frame_atual"] >= len(inimigo["frames"]):
+                    inimigo["frame_atual"] = 0
+                inimigo["imagem"] = inimigo["frames"][inimigo["frame_atual"]]
+        
+        inimigo["hitbox"].x = inimigo["x"] + 2
+        inimigo["hitbox"].y = inimigo["y"] + 130
 
-     inimigo["x"] += inimigo["vel"] * inimigo["dir"]
-     if "frames" in inimigo:
-
-         inimigo["contador"] += 1
-
-         if inimigo["contador"] >= 8:
- 
-            inimigo["contador"] = 0
-
-            inimigo["frame_atual"] += 1
-
-            if inimigo["frame_atual"] >= len(inimigo["frames"]):
-                inimigo["frame_atual"] = 0
-
-            inimigo["imagem"] = inimigo["frames"][inimigo["frame_atual"]]
-     
-     inimigo["hitbox"].x = inimigo["x"] + 35
-     inimigo["hitbox"].y = inimigo["y"] + 70
-
-
-     if inimigo["x"] >= inimigo["fim"]:
-        inimigo["dir"] = -1
-
-
-     if inimigo["x"] <= inimigo["inicio"]:
-        inimigo["dir"] = 1
+        if inimigo["x"] >= inimigo["fim"]:
+            inimigo["dir"] = -1
+        if inimigo["x"] <= inimigo["inicio"]:
+            inimigo["dir"] = 1
 
     personagem_x = max(0, personagem_x) 
 
     camera_x = max(0, personagem_x - 200)
     char1_x = personagem_x - camera_x  
 
-    
+    coluna_inicial = int(camera_x // TILE)
+    colunas_finais = 1280 // TILE + 2
 
     collider_list = []
-    for i in range(len(mapa)):
-        for j in range(len(mapa[i])):
-            if mapa[i][j] == "C" or mapa[i][j] == "P":
-                collider_list.append(pygame.Rect(j * TILE, i * TILE + 32, TILE, TILE - 32))
-            elif mapa[i][j] == "D":
-                collider_list.append(pygame.Rect(j * TILE, i * TILE, TILE, TILE))
+    for col_tela in range(colunas_finais):
+        col_mapa = (coluna_inicial + col_tela) % largura_mapa
+        for i, linha in enumerate(mapa):
+            cel = linha[col_mapa]
+            y = i * TILE
+            if cel == 'C' or cel == 'P':
+                collider_list.append(pygame.Rect((coluna_inicial + col_tela) * TILE, y + 32, TILE, TILE - 32))
+            elif cel == 'D':
+                collider_list.append(pygame.Rect((coluna_inicial + col_tela) * TILE, y, TILE, TILE))
 
     #colisão horizontal
     collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
@@ -255,18 +235,17 @@ while True:
     
     # colisão personagem com inimigos
     for inimigo in inimigos:
-      if not inimigo ['vivo']:
-          continue
-      
-      if collider_personagem.colliderect(inimigo["hitbox"]):
-         if velocidadechar1_y > 0 and collider_personagem.bottom < inimigo["hitbox"].top + 8:
-             inimigo["vivo"] = False
-             velocidadechar1_y = -10
-         else:
-           if collider_personagem.centerx < inimigo["hitbox"].centerx:
-             personagem_x = inimigo["hitbox"].left - personagem_parado.get_width()
-           else:
-              personagem_x = inimigo["hitbox"].right
+        if not inimigo['vivo']:
+            continue
+        if collider_personagem.colliderect(inimigo["hitbox"]):
+            if velocidadechar1_y > 0 and collider_personagem.bottom < inimigo["hitbox"].top + 8:
+                inimigo["vivo"] = False
+                velocidadechar1_y = -10
+            else:
+                if collider_personagem.centerx < inimigo["hitbox"].centerx:
+                    personagem_x = inimigo["hitbox"].left - personagem_parado.get_width()
+                else:
+                    personagem_x = inimigo["hitbox"].right
 
     # animação do personagem
     deslocamento_x_pulo = 0
@@ -296,9 +275,6 @@ while True:
         screen.blit(camada, (-deslocamento, 0))
         screen.blit(camada, (1280 - deslocamento, 0))
 
-    coluna_inicial = int(camera_x // TILE)
-    colunas_finais = 1280 // TILE + 2
-
     for col_tela in range(colunas_finais):
         col_mapa = (coluna_inicial + col_tela) % largura_mapa
         x = (coluna_inicial + col_tela) * TILE - int(camera_x)
@@ -307,20 +283,14 @@ while True:
             y = i * TILE
             if cel == 'C':
                 screen.blit(t_topo, (x, y))
-                collider_list.append(pygame.Rect(j * TILE, i * TILE + 32, TILE, TILE - 32))
             elif cel == 'D':
                 screen.blit(t_fill, (x, y))
-                collider_list.append(pygame.Rect(j * TILE, i * TILE, TILE, TILE))
             elif cel == 'P':
-                screen.blit(t_topo, (x, y))   
-                collider_list.append(pygame.Rect(j * TILE, i * TILE + 32, TILE, TILE - 32))
-    
+                screen.blit(t_topo, (x, y))
+
     for inimigo in inimigos:
-      if inimigo["vivo"]:
-         img = inimigo["imagem"]
-         screen.blit(img, (inimigo['x'] - camera_x, inimigo['y']))
-
-
+        if inimigo["vivo"]:
+            screen.blit(inimigo["imagem"], (inimigo['x'] - camera_x, inimigo['y']))
 
     screen.blit(imagem_atual, (char1_x + deslocamento_x_pulo, char1_y + deslocamento_y_pulo))
 
