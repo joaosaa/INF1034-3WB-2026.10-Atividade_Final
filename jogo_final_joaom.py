@@ -124,12 +124,13 @@ inimigos = [{
         "frames": frames_caranguejo,
         "frame_atual": 0,
         "contador": 0,
-        "hitbox": pygame.Rect(0,0,75,25),
+        "hitbox": pygame.Rect(0,0,75,30),
+        "offset_y": 130,
         "vivo": True
     }, 
     {
         "x": 1100,
-        "y": 315,
+        "y": 485,        
         "inicio": 1100,
         "fim": 1500,
         "vel": 2,
@@ -138,7 +139,8 @@ inimigos = [{
         "frames": frames_lagosta,
         "frame_atual": 0,
         "contador": 0,
-        "hitbox": pygame.Rect(0,0,75,25),
+        "hitbox": pygame.Rect(0,0,108,25),
+        "offset_y": 0,
         "vivo": True
     }]
 
@@ -174,7 +176,7 @@ while True:
                 inimigo["imagem"] = inimigo["frames"][inimigo["frame_atual"]]
         
         inimigo["hitbox"].x = inimigo["x"] + 2
-        inimigo["hitbox"].y = inimigo["y"] + 130
+        inimigo["hitbox"].y = inimigo["y"] + inimigo["offset_y"]
 
         if inimigo["x"] >= inimigo["fim"]:
             inimigo["dir"] = -1
@@ -291,6 +293,10 @@ while True:
     for inimigo in inimigos:
         if inimigo["vivo"]:
             screen.blit(inimigo["imagem"], (inimigo['x'] - camera_x, inimigo['y']))
+            hitbox_tela = pygame.Rect(inimigo["hitbox"].x - int(camera_x), inimigo["hitbox"].y, inimigo["hitbox"].width, inimigo["hitbox"].height)
+            sprite_tela = pygame.Rect(inimigo["x"] - int(camera_x), inimigo["y"], inimigo["imagem"].get_width(), inimigo["imagem"].get_height())
+            pygame.draw.rect(screen, (255, 0, 0), hitbox_tela, 2)
+            pygame.draw.rect(screen, (0, 255, 0), sprite_tela, 2)
 
     screen.blit(imagem_atual, (char1_x + deslocamento_x_pulo, char1_y + deslocamento_y_pulo))
 
