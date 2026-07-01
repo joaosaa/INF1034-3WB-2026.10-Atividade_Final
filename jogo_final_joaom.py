@@ -5,9 +5,6 @@ pygame.init()
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 
-inimigo1_img = pygame.image.load('Characters/char2.png')
-inimigo1_img = pygame.transform.scale(inimigo1_img, (120, 120))
-
 inimigo2_img = pygame.image.load('Characters/char3.png')
 inimigo2_img = pygame.transform.scale(inimigo2_img, (140, 140))
 
@@ -15,6 +12,7 @@ inimigo3_img = pygame.image.load('Characters/char4.png')
 inimigo3_img = pygame.transform.scale(inimigo3_img, (160, 160))
 
 #spritesheet
+
 spritesheet_andar = pygame.image.load('Characters/spritesheet_andar.png').convert_alpha()
 largura_total = spritesheet_andar.get_width()
 frame_h = spritesheet_andar.get_height()
@@ -53,6 +51,28 @@ for i in range(num_frames_pular):
 frame_atual = 0
 contador_frames = 0
 intervalo_frame = 9
+
+# spritesheet caranguejo
+spritesheet_caranguejo = pygame.image.load('Characters/caranguejo.png').convert_alpha()
+
+largura_caranguejo = spritesheet_caranguejo.get_width()
+altura_caranguejo = spritesheet_caranguejo.get_height()
+
+num_frames_caranguejo = 7
+
+frame_w_caranguejo = largura_caranguejo // num_frames_caranguejo
+
+
+frames_caranguejo = []
+
+
+for i in range(num_frames_caranguejo):
+    frame = pygame.Surface((frame_w_caranguejo, altura_caranguejo), pygame.SRCALPHA)
+
+    frame.blit(spritesheet_caranguejo, (0,0),(i * frame_w_caranguejo, 0 ,frame_w_caranguejo,altura_caranguejo))
+
+    frame = pygame.transform.scale(frame,(int(frame_w_caranguejo * 0.35), int(altura_caranguejo * 0.35)))
+    frames_caranguejo.append(frame)
 
 #background
 camadas = []
@@ -100,14 +120,17 @@ virado_direita = True
 
 #inimigos
 inimigos = [{
-        "x": 700,
-        "y": 460,
-        "inicio": 700,
-        "fim": 875,
+        "x": 750,
+        "y": 377,
+        "inicio":750,
+        "fim": 890,
         "vel": 2,
         "dir": 1,
-        "imagem": inimigo1_img,
-        "hitbox": pygame.Rect(0,0,80,100),
+        "imagem": frames_caranguejo[0],
+        "frames": frames_caranguejo,
+        "frame_atual": 0,
+        "contador": 0,
+        "hitbox": pygame.Rect(0,0,45,15),
         "vivo": True
     }, 
     {
@@ -156,9 +179,23 @@ while True:
     for inimigo in inimigos:
 
      inimigo["x"] += inimigo["vel"] * inimigo["dir"]
+     if "frames" in inimigo:
+
+         inimigo["contador"] += 1
+
+         if inimigo["contador"] >= 8:
+ 
+            inimigo["contador"] = 0
+
+            inimigo["frame_atual"] += 1
+
+            if inimigo["frame_atual"] >= len(inimigo["frames"]):
+                inimigo["frame_atual"] = 0
+
+            inimigo["imagem"] = inimigo["frames"][inimigo["frame_atual"]]
      
-     inimigo["hitbox"].x = inimigo["x"] + 20
-     inimigo["hitbox"].y = inimigo["y"] + 10
+     inimigo["hitbox"].x = inimigo["x"] + 35
+     inimigo["hitbox"].y = inimigo["y"] + 70
 
 
      if inimigo["x"] >= inimigo["fim"]:
@@ -217,14 +254,12 @@ while True:
         velocidadechar1_y = forca_pulo
     
     # colisão personagem com inimigos
-
     for inimigo in inimigos:
       if not inimigo ['vivo']:
           continue
       
       if collider_personagem.colliderect(inimigo["hitbox"]):
-         if velocidadechar1_y > 0 and collider_personagem.bottom < inimigo["hitbox"].top + 30:
-
+         if velocidadechar1_y > 0 and collider_personagem.bottom < inimigo["hitbox"].top + 8:
              inimigo["vivo"] = False
              velocidadechar1_y = -10
          else:
