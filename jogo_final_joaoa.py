@@ -65,22 +65,22 @@ def get_tile(col, lin):
 
 t_topo = get_tile(1, 0) 
 t_fill = get_tile(1, 4)
-t_diamante = get_tile(1, 10)
+t_diamante = pygame.transform.scale(get_tile(1, 10), (48, 48))
 
 mapa = [
-    "                                                             ",
-    "                                                             ",
-    "                                                             ",
-    "                                                             ",
-    "                              G                              ",
-    "                          PPP                                ",
-    "                PP     PP                 PPP        PPP     ",
-    "           G        G             PP              G         ",
-    "CCCCCCCCCC  CCC   CCCCCCCCCCCCCCC       CCCCCCCCCCCCCCCCCCCC",
-    "DDDDDDDDDD  DDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDD",
-    "DDDDDDDDDD  DDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDD",
-    "DDDDDDDDDD  DDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDD",
-    "DDDDDDDDDD  DDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDD",
+    "                                                              ",
+    "                                                              ",
+    "                                                              ",
+    "                                                              ",
+    "                                                              ",
+    "                          PPP                                 ",
+    "                PP     PP              G  PPP        PPP      ",
+    "G          G                G      PP              G          ",
+    "CCCCCCCCCCCCCC   CCCCCCCCCCCCCCC       CCCCCCCCCCCCCCCCCCCCCCC",
+    "DDDDDDDDDDDDDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDDDDD",
+    "DDDDDDDDDDDDDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDDDDD",
+    "DDDDDDDDDDDDDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDDDDD",
+    "DDDDDDDDDDDDDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDDDDD",
 ]
 
 largura_mapa = max(len(linha) for linha in mapa)
@@ -170,7 +170,7 @@ while True:
     if teclas[pygame.K_SPACE] and no_chao:
         velocidadechar1_y = forca_pulo
 
-    # coletar diamantes
+    # coleta de diamantes — usa coluna no mundo pra funcionar em todas as voltas
     for col_tela in range(colunas_finais):
         col_mapa = (coluna_inicial + col_tela) % largura_mapa
         coluna_mundo = coluna_inicial + col_tela
@@ -225,7 +225,8 @@ while True:
             elif cel == 'P':
                 screen.blit(t_topo, (x, y))
             elif cel == 'G' and (coluna_mundo, i) not in diamantes_coletados:
-                screen.blit(t_diamante, (x, y))
+                offset = (TILE + 32) // 2
+                screen.blit(t_diamante, (x + offset, y + offset))
 
     screen.blit(imagem_atual, (char1_x + deslocamento_x_pulo, char1_y + deslocamento_y_pulo))
 
