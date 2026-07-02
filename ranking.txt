@@ -1,5 +1,5 @@
 a,350
 a,350
 a,350
-luigi,0
-luigi,0
+denis,200
+luiji,200

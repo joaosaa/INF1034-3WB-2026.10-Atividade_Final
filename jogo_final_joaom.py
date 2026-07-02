@@ -73,6 +73,21 @@ for i in range(num_frames_lagosta):
     frame = pygame.transform.scale(frame, (int(frame_w_lagosta * 0.45), int(altura_lagosta * 0.45)))
     frames_lagosta.append(frame)
 
+# spritesheet boss
+spritesheet_boss = pygame.image.load('Characters/boss_final.png').convert_alpha()
+largura_boss = spritesheet_boss.get_width()
+altura_boss = spritesheet_boss.get_height()
+num_frames_boss = 5
+frame_w_boss = largura_boss // num_frames_boss
+espaco = 10 
+frames_boss = []
+for i in range(num_frames_boss):
+    x_inicio = i * frame_w_boss
+    frame = pygame.Surface((frame_w_boss - espaco, altura_boss),  pygame.SRCALPHA)
+    frame.blit(spritesheet_boss, (0, 0), (x_inicio, 0, frame_w_boss - espaco, altura_boss))
+    frame = pygame.transform.scale(frame, (int(frame.get_width() * 1), int(frame.get_height() * 1)))
+    frames_boss.append(frame)
+
 #background
 camadas = []
 velocidades = [0.05, 0.15, 0.25, 0.4]
@@ -112,37 +127,71 @@ forca_pulo = -15
 no_chao = True
 virado_direita = True
 
+def criar_inimigo(tipo, x, y, inicio, fim):
+
+    if tipo == "caranguejo":
+        return {
+            "x": x,
+            "y": y,
+            "inicio": inicio,
+            "fim": fim,
+            "vel": 2,
+            "dir": 1,
+            "imagem": frames_caranguejo[0],
+            "frames": frames_caranguejo,
+            "frame_atual": 0,
+            "contador": 0,
+            "hitbox": pygame.Rect(0,0,75,30),
+            "offset_y": 130,
+            "vivo": True
+        }
+
+
+    if tipo == "lagosta":
+        return {
+            "x": x,
+            "y": y,
+            "inicio": inicio,
+            "fim": fim,
+            "vel": 2,
+            "dir": -1,
+            "imagem": frames_lagosta[0],
+            "frames": frames_lagosta,
+            "frame_atual": 0,
+            "contador": 0,
+            "hitbox": pygame.Rect(0,0,108,25),
+            "offset_y": 0,
+            "vivo": True
+        }
+    if tipo == "boss":
+
+        return {
+            "x": x,
+            "y": y,
+            "inicio": x,
+            "fim": x,
+            "vel": 0,
+            "dir": 1,
+            "imagem": frames_boss[0],
+            "frames": frames_boss,
+            "frame_atual": 0,
+            "contador": 0,
+            "hitbox": pygame.Rect(0,0,180,100),
+            "offset_y": 0,
+            "vivo": True
+        }
 #inimigos
-inimigos = [{
-        "x": 750,
-        "y": 377,
-        "inicio": 750,
-        "fim": 890,
-        "vel": 2,
-        "dir": 1,
-        "imagem": frames_caranguejo[0],
-        "frames": frames_caranguejo,
-        "frame_atual": 0,
-        "contador": 0,
-        "hitbox": pygame.Rect(0,0,75,30),
-        "offset_y": 130,
-        "vivo": True
-    }, 
-    {
-        "x": 1100,
-        "y": 485,
-        "inicio": 1100,
-        "fim": 1500,
-        "vel": 2,
-        "dir": -1,
-        "imagem": frames_lagosta[0],
-        "frames": frames_lagosta,
-        "frame_atual": 0,
-        "contador": 0,
-        "hitbox": pygame.Rect(0,0,108,25),
-        "offset_y": 0,
-        "vivo": True
-    }]
+inimigos = [
+    criar_inimigo("caranguejo",750,377,750,890),
+    criar_inimigo("caranguejo",1140,377,1140,1500),
+    criar_inimigo("caranguejo",1650,185,1650,1790),
+    criar_inimigo("caranguejo",2850,377,2850,3050),
+    criar_inimigo("caranguejo", 3100, 377, 3100, 3350),
+    criar_inimigo("caranguejo", 3800, 377, 3800, 4000),
+    criar_inimigo("boss", 300, 300, 300, 200)
+    ]
+
+    
 
 while True:
     for evento in pygame.event.get():
