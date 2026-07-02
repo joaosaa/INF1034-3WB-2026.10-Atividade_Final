@@ -28,7 +28,7 @@ canal_passos = pygame.mixer.Channel(1)
 canal_inimigos = pygame.mixer.Channel(2)
 
 def tocar_som_do_inimigo(tipo):
-    if tipo == "siri":
+    if tipo == "caranguejo":
         canal_inimigos.play(som_siri)
     elif tipo == "lagosta":
         canal_inimigos.play(som_lagosta)
@@ -170,7 +170,6 @@ largura_lagosta = spritesheet_lagosta.get_width()
 altura_lagosta = spritesheet_lagosta.get_height()
 num_frames_lagosta = 7
 frame_w_lagosta = largura_lagosta // num_frames_lagosta
-
 frames_lagosta = []
 for i in range(num_frames_lagosta):
     x_inicio = i * frame_w_lagosta
@@ -178,6 +177,21 @@ for i in range(num_frames_lagosta):
     frame.blit(spritesheet_lagosta, (0, 0), (x_inicio, 0, frame_w_lagosta, altura_lagosta))
     frame = pygame.transform.scale(frame, (int(frame_w_lagosta * 0.45), int(altura_lagosta * 0.45)))
     frames_lagosta.append(frame)
+
+# spritesheet boss
+spritesheet_boss = pygame.image.load('Characters/boss_final.png').convert_alpha()
+largura_boss = spritesheet_boss.get_width()
+altura_boss = spritesheet_boss.get_height()
+num_frames_boss = 5
+frame_w_boss = largura_boss // num_frames_boss
+espaco = 10 
+frames_boss = []
+for i in range(num_frames_boss):
+    x_inicio = i * frame_w_boss
+    frame = pygame.Surface((frame_w_boss - espaco, altura_boss),  pygame.SRCALPHA)
+    frame.blit(spritesheet_boss, (0, 0), (x_inicio, 0, frame_w_boss - espaco, altura_boss))
+    frame = pygame.transform.scale(frame, (int(frame.get_width() * 1), int(frame.get_height() * 1)))
+    frames_boss.append(frame)
 
 #background
 camadas = []
@@ -226,43 +240,72 @@ largura_mapa_px = largura_mapa * TILE
 
 moedas_coletadas = set()
 
-# LISTA DE INIMIGOS: SIRI E LAGOSTA (LUIGI)
+def criar_inimigo(tipo, x, y, inicio, fim):
+
+    if tipo == "caranguejo":
+        return {
+            "x": x,
+            "y": y,
+            "tipo": tipo,
+            "inicio": inicio,
+            "fim": fim,
+            "vel": 2,
+            "dir": 1,
+            "imagem": frames_caranguejo[0],
+            "frames": frames_caranguejo,
+            "frame_atual": 0,
+            "contador": 0,
+            "hitbox": pygame.Rect(0,0,75,30),
+            "offset_y": 130,
+            "vivo": True
+        }
+
+
+    if tipo == "lagosta":
+        return {
+            "x": x,
+            "y": y,
+            "tipo": tipo,
+            "inicio": inicio,
+            "fim": fim,
+            "vel": 2,
+            "dir": -1,
+            "imagem": frames_lagosta[0],
+            "frames": frames_lagosta,
+            "frame_atual": 0,
+            "contador": 0,
+            "hitbox": pygame.Rect(0,0,108,25),
+            "offset_y": 0,
+            "vivo": True
+        }
+    if tipo == "boss":
+
+        return {
+            "x": x,
+            "y": y,
+            "inicio": x,
+            "fim": x,
+            "vel": 0,
+            "dir": 1,
+            "imagem": frames_boss[0],
+            "frames": frames_boss,
+            "frame_atual": 0,
+            "contador": 0,
+            "hitbox": pygame.Rect(0,0,180,100),
+            "offset_y": 0,
+            "vivo": True
+        }
+
+#inimigos
 inimigos = [
-    {
-        "x": 750,
-        "y": 377,
-        "inicio": 750,
-        "fim": 890,
-        "vel": 2,
-        "dir": 1,
-        "imagem": frames_caranguejo[0],
-        "frames": frames_caranguejo,
-        "frame_atual": 0,
-        "contador": 0,
-        "dx_hitbox": 2,
-        "dy_hitbox": 130,
-        "hitbox": pygame.Rect(0, 0, 75, 25),
-        "vivo": True,
-        "tipo": "siri"
-    },
-    {
-        "x": 1100,
-        "y": 485,
-        "inicio": 1100,
-        "fim": 1500,
-        "vel": 2,
-        "dir": -1,
-        "imagem": frames_lagosta[0],
-        "frames": frames_lagosta,
-        "frame_atual": 0,
-        "contador": 0,
-        "dx_hitbox": 10,
-        "dy_hitbox": 0,
-        "hitbox": pygame.Rect(0, 0, 108, 25),
-        "vivo": True,
-        "tipo": "lagosta"
-    }
-]
+    criar_inimigo("caranguejo",750,377,750,890),
+    criar_inimigo("caranguejo",1140,377,1140,1500),
+    criar_inimigo("caranguejo",1650,185,1650,1790),
+    criar_inimigo("caranguejo",2850,377,2850,3050),
+    criar_inimigo("caranguejo", 3100, 377, 3100, 3350),
+    criar_inimigo("caranguejo", 3800, 377, 3800, 4000),
+    criar_inimigo("boss", 300, 300, 300, 200)
+    ]
 
 #movimentação do personagem
 personagem_x = 200
@@ -406,26 +449,24 @@ while True:
         else:
             velocidadechar1_y = 0
 
-        # MOVIMENTAÇÃO E ANIMAÇÃO DOS INIMIGOS (LUIGI)
-        for inimigo in inimigos:
-            inimigo["x"] += inimigo["vel"] * inimigo["dir"]
+    for inimigo in inimigos:
+        inimigo["x"] += inimigo["vel"] * inimigo["dir"]
+        if "frames" in inimigo:
+            inimigo["contador"] += 1
+            if inimigo["contador"] >= 8:
+                inimigo["contador"] = 0
+                inimigo["frame_atual"] += 1
+                if inimigo["frame_atual"] >= len(inimigo["frames"]):
+                    inimigo["frame_atual"] = 0
+                inimigo["imagem"] = inimigo["frames"][inimigo["frame_atual"]]
+        
+        inimigo["hitbox"].x = inimigo["x"] + 2
+        inimigo["hitbox"].y = inimigo["y"] + inimigo["offset_y"]
 
-            if "frames" in inimigo:
-                inimigo["contador"] += 1
-                if inimigo["contador"] >= 8:
-                    inimigo["contador"] = 0
-                    inimigo["frame_atual"] += 1
-                    if inimigo["frame_atual"] >= len(inimigo["frames"]):
-                        inimigo["frame_atual"] = 0
-                    inimigo["imagem"] = inimigo["frames"][inimigo["frame_atual"]]
-
-            inimigo["hitbox"].x = inimigo["x"] + inimigo["dx_hitbox"]
-            inimigo["hitbox"].y = inimigo["y"] + inimigo["dy_hitbox"]
-
-            if inimigo["x"] >= inimigo["fim"]:
-                inimigo["dir"] = -1
-            if inimigo["x"] <= inimigo["inicio"]:
-                inimigo["dir"] = 1
+        if inimigo["x"] >= inimigo["fim"]:
+            inimigo["dir"] = -1
+        if inimigo["x"] <= inimigo["inicio"]:
+            inimigo["dir"] = 1
 
     personagem_x = max(0, personagem_x)
     personagem_x = min(personagem_x, largura_mapa_px * 3 - personagem_parado.get_width())
