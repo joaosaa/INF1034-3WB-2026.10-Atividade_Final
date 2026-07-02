@@ -71,7 +71,7 @@ mapa = [
     "                                                             ",
     "                                                             ",
     "                                                             ",
-    "          G              G                    G              ",
+    "                                                             ",
     "                                                             ",
     "                          PPP                                ",
     "                PP     PP                 PPP        PPP     ",
@@ -170,13 +170,18 @@ while True:
     if teclas[pygame.K_SPACE] and no_chao:
         velocidadechar1_y = forca_pulo
 
-    # coleta de diamantes
-    for i, linha in enumerate(mapa):
-        for j, cel in enumerate(linha):
-            if cel == 'G' and (j, i) not in diamantes_coletados:
-                rect_diamante = pygame.Rect(j * TILE, i * TILE, TILE, TILE)
-                if collider_personagem.colliderect(rect_diamante):
-                    diamantes_coletados.add((j, i))
+    # coleta de diamantes — usa coluna no mundo pra funcionar em todas as voltas
+    for col_tela in range(colunas_finais):
+        col_mapa = (coluna_inicial + col_tela) % largura_mapa
+        coluna_mundo = coluna_inicial + col_tela
+        for i, linha in enumerate(mapa):
+            cel = linha[col_mapa]
+            if cel == 'G':
+                chave = (coluna_mundo, i)
+                if chave not in diamantes_coletados:
+                    rect_diamante = pygame.Rect(coluna_mundo * TILE, i * TILE, TILE, TILE)
+                    if collider_personagem.colliderect(rect_diamante):
+                        diamantes_coletados.add(chave)
 
     # animação do personagem
     deslocamento_x_pulo = 0
@@ -208,7 +213,8 @@ while True:
 
     for col_tela in range(colunas_finais):
         col_mapa = (coluna_inicial + col_tela) % largura_mapa
-        x = (coluna_inicial + col_tela) * TILE - int(camera_x)
+        coluna_mundo = coluna_inicial + col_tela
+        x = coluna_mundo * TILE - int(camera_x)
         for i, linha in enumerate(mapa):
             cel = linha[col_mapa]
             y = i * TILE
@@ -218,7 +224,7 @@ while True:
                 screen.blit(t_fill, (x, y))
             elif cel == 'P':
                 screen.blit(t_topo, (x, y))
-            elif cel == 'G' and (col_mapa, i) not in diamantes_coletados:
+            elif cel == 'G' and (coluna_mundo, i) not in diamantes_coletados:
                 screen.blit(t_diamante, (x, y))
 
     screen.blit(imagem_atual, (char1_x + deslocamento_x_pulo, char1_y + deslocamento_y_pulo))
