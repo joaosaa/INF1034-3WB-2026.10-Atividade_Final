@@ -130,7 +130,7 @@ while True:
     personagem_x = max(0, personagem_x)
     personagem_x = min(personagem_x, largura_mapa_px * 3 - personagem_parado.get_width())
 
-    # detectar fim da terceira volta
+    #fim terceira volta
     if personagem_x >= largura_mapa_px * 3 - personagem_parado.get_width():
         fadendo = True
 
