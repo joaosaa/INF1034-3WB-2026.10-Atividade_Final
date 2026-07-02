@@ -191,7 +191,7 @@ while True:
     if teclas[pygame.K_SPACE] and no_chao and not fadendo:
         velocidadechar1_y = forca_pulo
 
-    # coleta de moedas
+    #coletar moedas
     for col_tela in range(colunas_finais):
         col_mapa = (coluna_inicial + col_tela) % largura_mapa
         coluna_mundo = coluna_inicial + col_tela
@@ -250,7 +250,7 @@ while True:
 
     screen.blit(imagem_atual, (char1_x + deslocamento_x_pulo, char1_y + deslocamento_y_pulo))
 
-    # fade to black
+    #fade
     if fadendo:
         fade_alpha = min(255, fade_alpha + 3)
         fade_surface.set_alpha(fade_alpha)
