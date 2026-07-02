@@ -72,10 +72,10 @@ mapa = [
     "                                                             ",
     "                                                             ",
     "                                                             ",
-    "                                                             ",
+    "                              G                              ",
     "                          PPP                                ",
     "                PP     PP                 PPP        PPP     ",
-    "           G                       PP              G         ",
+    "           G        G             PP              G         ",
     "CCCCCCCCCC  CCC   CCCCCCCCCCCCCCC       CCCCCCCCCCCCCCCCCCCC",
     "DDDDDDDDDD  DDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDD",
     "DDDDDDDDDD  DDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDD",
@@ -170,7 +170,7 @@ while True:
     if teclas[pygame.K_SPACE] and no_chao:
         velocidadechar1_y = forca_pulo
 
-    # coleta de diamantes — usa coluna no mundo pra funcionar em todas as voltas
+    # coletar diamantes
     for col_tela in range(colunas_finais):
         col_mapa = (coluna_inicial + col_tela) % largura_mapa
         coluna_mundo = coluna_inicial + col_tela
