@@ -74,8 +74,8 @@ mapa = [
     "                                                              ",
     "                                                              ",
     "                          PPP                                 ",
-    "                PP     PP              G  PPP        PPP      ",
-    "G          G                G      PP              G          ",
+    "                PP     PP                 PPP        PPP      ",
+    "           G                       PP              G          ",
     "CCCCCCCCCCCCCC   CCCCCCCCCCCCCCC       CCCCCCCCCCCCCCCCCCCCCCC",
     "DDDDDDDDDDDDDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDDDDD",
     "DDDDDDDDDDDDDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDDDDD",
@@ -85,6 +85,8 @@ mapa = [
 
 largura_mapa = max(len(linha) for linha in mapa)
 mapa = [linha.ljust(largura_mapa) for linha in mapa]
+largura_mapa_px = largura_mapa * TILE
+largura_mapa_px = largura_mapa * TILE
 
 diamantes_coletados = set()
 
@@ -98,6 +100,11 @@ forca_pulo = -15
 no_chao = True
 virado_direita = True
 
+fade_alpha = 0
+fadendo = False
+fade_surface = pygame.Surface((1280, 720))
+fade_surface.fill((0, 0, 0))
+
 while True:
     for evento in pygame.event.get():
         if evento.type == pygame.QUIT:
@@ -108,19 +115,30 @@ while True:
 
     teclas = pygame.key.get_pressed()
     movendo = False
-    if teclas[pygame.K_d]:
-        personagem_x += 300 * dt / 1000 
-        virado_direita = True
-        movendo = True
 
-    if teclas[pygame.K_a]:
-        personagem_x -= 300 * dt / 1000
-        virado_direita = False
-        movendo = True
+    if not fadendo:
+        if teclas[pygame.K_d]:
+            personagem_x += 300 * dt / 1000 
+            virado_direita = True
+            movendo = True
 
-    personagem_x = max(0, personagem_x) 
+        if teclas[pygame.K_a]:
+            personagem_x -= 300 * dt / 1000
+            virado_direita = False
+            movendo = True
+
+    personagem_x = max(0, personagem_x)
+    personagem_x = min(personagem_x, largura_mapa_px * 3 - personagem_parado.get_width())
+
+    # detectar fim da terceira volta
+    if personagem_x >= largura_mapa_px * 3 - personagem_parado.get_width():
+        fadendo = True
+
+    if fadendo:
+        velocidadechar1_y = 0
 
     camera_x = max(0, personagem_x - 200)
+    camera_x = min(camera_x, largura_mapa_px * 3 - 1280)
     char1_x = personagem_x - camera_x  
 
     coluna_inicial = int(camera_x // TILE)
@@ -148,6 +166,7 @@ while True:
             collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
 
     camera_x = max(0, personagem_x - 200)
+    camera_x = min(camera_x, largura_mapa_px * 3 - 1280)
     char1_x = personagem_x - camera_x
 
     velocidadechar1_y += gravidade
@@ -167,10 +186,10 @@ while True:
                 char1_y = bloco.bottom
                 velocidadechar1_y = 0
 
-    if teclas[pygame.K_SPACE] and no_chao:
+    if teclas[pygame.K_SPACE] and no_chao and not fadendo:
         velocidadechar1_y = forca_pulo
 
-    # coleta de diamantes — usa coluna no mundo pra funcionar em todas as voltas
+    # coleta de diamantes
     for col_tela in range(colunas_finais):
         col_mapa = (coluna_inicial + col_tela) % largura_mapa
         coluna_mundo = coluna_inicial + col_tela
@@ -225,9 +244,20 @@ while True:
             elif cel == 'P':
                 screen.blit(t_topo, (x, y))
             elif cel == 'G' and (coluna_mundo, i) not in diamantes_coletados:
-                offset = (TILE + 32) // 2
-                screen.blit(t_diamante, (x + offset, y + offset))
+                offset_x = (TILE - 48) // 2
+                offset_y = TILE - 48
+                screen.blit(t_diamante, (x + offset_x, y + offset_y))
 
     screen.blit(imagem_atual, (char1_x + deslocamento_x_pulo, char1_y + deslocamento_y_pulo))
+
+    # fade to black
+    if fadendo:
+        fade_alpha = min(255, fade_alpha + 3)
+        fade_surface.set_alpha(fade_alpha)
+        screen.blit(fade_surface, (0, 0))
+        if fade_alpha >= 255:
+            pygame.time.wait(500)
+            pygame.quit()
+            sys.exit()
 
     pygame.display.update()
