@@ -10,9 +10,7 @@ pygame.mixer.music.load("sounds/TRILHA SONORA/Soundtrack.mp3")
 pygame.mixer.music.set_volume(0.090)
 pygame.mixer.music.play(-1)
 
-# o pygame só cria 8 canais de som por padrão. Como já temos vários sons
-# (passos, pulo, aterrissagem, moeda) disputando esses canais, aumentamos
-# a quantidade pra sobrar espaço.
+
 pygame.mixer.set_num_channels(16)
 
 som_passos = pygame.mixer.Sound("sounds/PASSOS NA PEDRA/PASSO.mpeg")
