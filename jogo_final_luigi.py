@@ -4,41 +4,34 @@ pygame.init()
 pygame.mixer.init()
 pygame.display.set_caption("Deepstrand")
 
-# ==========================================================
-# SISTEMA DE ÁUDIO GERAL (trilha sonora e efeitos do jogador)
-# ==========================================================
+tempo_ultimo_dano = 0
 
 pygame.mixer.music.load("sounds/TRILHA SONORA/Soundtrack.mp3")
 pygame.mixer.music.set_volume(0.090)
 pygame.mixer.music.play(-1)
 
+
+pygame.mixer.set_num_channels(16)
+
 som_passos = pygame.mixer.Sound("sounds/PASSOS NA PEDRA/PASSO.mpeg")
 som_pulo = pygame.mixer.Sound("sounds/PULO/jump.mp3")
 som_moeda = pygame.mixer.Sound("sounds/COLETAR MOEDA/Picked Coin Echo.wav")
 som_aterrissagem = pygame.mixer.Sound("sounds/ATERRISSAGEM (LANDING AFTER JUMP)/ATERRISSAGEM.mpeg")
+som_siri = pygame.mixer.Sound("siri.mp3")
+som_lagosta = pygame.mixer.Sound("lagosta.mp3")
 
 som_passos.set_volume(0.4)
+
+# canal 1 é só dos passos, canal 2 é só do som de matar inimigo.
+# assim um som nunca corta o outro.
 canal_passos = pygame.mixer.Channel(1)
-
-try:
-    som_siri = pygame.mixer.Sound("siri.mp3")
-except Exception as erro:
-    print("AVISO: não consegui carregar siri.mp3 ->", erro)
-    som_siri = None
-
-try:
-    som_lagosta = pygame.mixer.Sound("lagosta.mp3")
-except Exception as erro:
-    print("AVISO: não consegui carregar lagosta.mp3 ->", erro)
-    som_lagosta = None
+canal_inimigos = pygame.mixer.Channel(2)
 
 def tocar_som_do_inimigo(tipo):
     if tipo == "siri":
-        if som_siri:
-            som_siri.play()
+        canal_inimigos.play(som_siri)
     elif tipo == "lagosta":
-        if som_lagosta:
-            som_lagosta.play()
+        canal_inimigos.play(som_lagosta)
 
 def atualizar_sistema_sonoro(jogador_movendo):
     if jogador_movendo:
@@ -47,10 +40,7 @@ def atualizar_sistema_sonoro(jogador_movendo):
     else:
         canal_passos.stop()
 
-# ==========================================================
-# SISTEMA DE HUD, PONTUAÇÃO E REGRAS
-# ==========================================================
-
+# SISTEMA DE HUD, PONTUAÇÃO E REGRAS (LUIGI)
 pygame.font.init()
 fonte_hud = pygame.font.SysFont("courier", 35, bold=True)
 fonte_telas = pygame.font.SysFont("courier", 90, bold=True)
@@ -62,6 +52,7 @@ vida_maxima = 100
 
 estado_jogo = "MENU"
 
+# VARIÁVEIS DO MENU, NOME DO JOGADOR E RANKING (LUIGI)
 nome_jogador = ""
 pontuacao_salva = False
 arquivo_ranking = "ranking.txt"
@@ -73,29 +64,19 @@ limite_vitoria_x = 3500
 boss_morto = False
 tempo_queda = 0
 
-# IMAGEM BOLHA
+# IMAGEM BOLHA (LUIGI)
 img_bolha = pygame.image.load("coracao bolha.png")
 img_bolha = pygame.transform.scale(img_bolha, (30, 30))
 img_bolha.set_colorkey((255, 255, 255))
 
-# ==========================================================
-# IMAGEM DE FUNDO DO MENU (Corrigido para a sua imagem)
-# ==========================================================
-try:
-    # AQUI ESTÁ A CORREÇÃO: Puxando exatamente tela_inicial
-    img_fundo_menu = pygame.image.load("tela_inicial.png")
-    img_fundo_menu = pygame.transform.scale(img_fundo_menu, (1280, 720))
-except Exception as erro:
-    print("AVISO: não consegui carregar a tela_inicial.jpg ->", erro)
-    img_fundo_menu = None
+# IMAGEM DE FUNDO DO MENU (LUIGI)
+img_fundo_menu = pygame.image.load("tela_inicial.png")
+img_fundo_menu = pygame.transform.scale(img_fundo_menu, (1280, 720))
 
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 
-# ==========================================================
-# FUNÇÕES DE RANKING
-# ==========================================================
-
+# FUNÇÕES DO RANKING: ORDENAR, CARREGAR E SALVAR A PONTUAÇÃO (LUIGI)
 def ordenar_ranking(lista):
     for i in range(len(lista)):
         for j in range(len(lista) - 1 - i):
@@ -170,7 +151,7 @@ frame_atual = 0
 contador_frames = 0
 intervalo_frame = 9
 
-# INIMIGOS ANIMADOS
+# spritesheet caranguejo
 spritesheet_caranguejo = pygame.image.load('Characters/caranguejo.png').convert_alpha()
 largura_caranguejo = spritesheet_caranguejo.get_width()
 altura_caranguejo = spritesheet_caranguejo.get_height()
@@ -184,6 +165,7 @@ for i in range(num_frames_caranguejo):
     frame = pygame.transform.scale(frame, (int(frame_w_caranguejo * 0.35), int(altura_caranguejo * 0.35)))
     frames_caranguejo.append(frame)
 
+# spritesheet lagosta
 spritesheet_lagosta = pygame.image.load('Characters/lagosta.png').convert_alpha()
 largura_lagosta = spritesheet_lagosta.get_width()
 altura_lagosta = spritesheet_lagosta.get_height()
@@ -219,14 +201,26 @@ def get_tile(col, lin):
 t_topo = get_tile(1, 0)
 t_fill = get_tile(1, 4)
 
-arquivo = open("mapa.txt", "r")
-mapa = arquivo.readlines()
-arquivo.close()
+mapa = [
+    "                                                                ",
+    "                                                                ",
+    "                                                                ",
+    "                                                                ",
+    "                                                                ",
+    "                           PPP                                  ",
+    "                PP    PP                PPP           PPP       ",
+    "                                PP                              ",
+    "CCCCCCCCCC  CCC   CCCCCCCCCCCCCCC       CCCCCCCCCCCCCCCCCCCC",
+    "DDDDDDDDDD  DDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDD",
+    "DDDDDDDDDD  DDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDD",
+    "DDDDDDDDDD  DDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDD",
+    "DDDDDDDDDD  DDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDD",
+]
 
-mapa = [linha.strip("\n") for linha in mapa]
 largura_mapa = max(len(linha) for linha in mapa)
 mapa = [linha.ljust(largura_mapa) for linha in mapa]
 
+# LISTA DE INIMIGOS: SIRI E LAGOSTA (LUIGI)
 inimigos = [
     {
         "x": 750,
@@ -247,7 +241,7 @@ inimigos = [
     },
     {
         "x": 1100,
-        "y": 315,
+        "y": 485,
         "inicio": 1100,
         "fim": 1500,
         "vel": 2,
@@ -257,8 +251,8 @@ inimigos = [
         "frame_atual": 0,
         "contador": 0,
         "dx_hitbox": 10,
-        "dy_hitbox": 90,
-        "hitbox": pygame.Rect(0, 0, 55, 20),
+        "dy_hitbox": 0,
+        "hitbox": pygame.Rect(0, 0, 108, 25),
         "vivo": True,
         "tipo": "lagosta"
     }
@@ -281,6 +275,7 @@ while True:
             pygame.quit()
             sys.exit()
 
+        # EVENTOS DO MENU, NOME DO JOGADOR E RANKING (LUIGI)
         if evento.type == pygame.KEYDOWN:
 
             if estado_jogo == "MENU":
@@ -307,6 +302,7 @@ while True:
                     velocidadechar1_y = 0
                     boss_morto = False
                     pontuacao_salva = False
+                    tempo_ultimo_dano = pygame.time.get_ticks()
                     for inimigo in inimigos:
                         inimigo["x"] = inimigo["inicio"]
                         inimigo["dir"] = 1
@@ -332,17 +328,21 @@ while True:
     teclas = pygame.key.get_pressed()
     movendo = False
 
+    # LÓGICA DE TEMPORIZADOR DE QUEDA (LUIGI)
     if estado_jogo == "TELA_QUEDA":
         if pygame.time.get_ticks() - tempo_queda > 2000:
             estado_jogo = "JOGANDO"
             personagem_x = 200
-            char1_y = 100
+            char1_y = 407
             velocidadechar1_y = 0
+            vida_atual = vida_maxima
+            tempo_ultimo_dano = pygame.time.get_ticks()
             for inimigo in inimigos:
                 inimigo["x"] = inimigo["inicio"]
                 inimigo["dir"] = 1
                 inimigo["vivo"] = True
 
+    # LÓGICA DE DANO, QUEDA E FIM DE JOGO (LUIGI)
     if estado_jogo == "JOGANDO":
 
         if char1_y > 800:
@@ -351,7 +351,6 @@ while True:
             vida_atual = vida_maxima
             if pontuacao < 0:
                 pontuacao = 0
-
             if coracoes <= 0:
                 estado_jogo = "DERROTA"
                 pontuacao = 0
@@ -365,6 +364,12 @@ while True:
             vida_atual = vida_maxima
             if pontuacao < 0:
                 pontuacao = 0
+            if coracoes <= 0:
+                estado_jogo = "DERROTA"
+                pontuacao = 0
+            else:
+                estado_jogo = "TELA_QUEDA"
+                tempo_queda = pygame.time.get_ticks()
 
         if coracoes <= 0:
             estado_jogo = "DERROTA"
@@ -385,6 +390,7 @@ while True:
             virado_direita = False
             movendo = True
 
+        # MOVIMENTAÇÃO E ANIMAÇÃO DOS INIMIGOS (LUIGI)
         for inimigo in inimigos:
             inimigo["x"] += inimigo["vel"] * inimigo["dir"]
 
@@ -402,7 +408,6 @@ while True:
 
             if inimigo["x"] >= inimigo["fim"]:
                 inimigo["dir"] = -1
-
             if inimigo["x"] <= inimigo["inicio"]:
                 inimigo["dir"] = 1
 
@@ -425,6 +430,7 @@ while True:
             elif cel == 'D':
                 collider_list.append(pygame.Rect((coluna_inicial + col_tela) * TILE, y, TILE, TILE))
 
+    #colisão horizontal
     collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
     for bloco in collider_list:
         if collider_personagem.colliderect(bloco):
@@ -434,11 +440,11 @@ while True:
                 personagem_x = bloco.right
             collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
 
+    # COLISÃO DO JOGADOR COM OS INIMIGOS: PISÃO MATA, TOQUE LATERAL TIRA VIDA (LUIGI)
     if estado_jogo == "JOGANDO":
         for inimigo in inimigos:
             if not inimigo["vivo"]:
                 continue
-
             if collider_personagem.colliderect(inimigo["hitbox"]):
                 if velocidadechar1_y > 0 and collider_personagem.bottom < inimigo["hitbox"].top + 8:
                     inimigo["vivo"] = False
@@ -451,6 +457,11 @@ while True:
                     else:
                         personagem_x = inimigo["hitbox"].right
                     collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
+                    tempo_atual = pygame.time.get_ticks()
+                    if tempo_atual - tempo_ultimo_dano > 1000:
+                        vida_atual -= 25
+                        tempo_ultimo_dano = tempo_atual
+                        velocidadechar1_y = -5
 
     camera_x = max(0, personagem_x - 200)
     char1_x = personagem_x - camera_x
@@ -458,6 +469,7 @@ while True:
     velocidadechar1_y += gravidade
     char1_y += velocidadechar1_y
 
+    #colisão vertical
     estava_no_ar = not no_chao
     no_chao = False
     collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
@@ -485,6 +497,7 @@ while True:
     else:
         atualizar_sistema_sonoro(movendo and no_chao)
 
+    # animacao do personagem
     deslocamento_x_pulo = 0
     deslocamento_y_pulo = 0
     if not no_chao:
@@ -534,20 +547,15 @@ while True:
         for inimigo in inimigos:
             if inimigo["vivo"]:
                 img = inimigo["imagem"]
+                if inimigo["dir"] == 1:
+                    img = pygame.transform.flip(img, True, False)
                 screen.blit(img, (inimigo["x"] - camera_x, inimigo["y"]))
 
         screen.blit(imagem_atual, (char1_x + deslocamento_x_pulo, char1_y + deslocamento_y_pulo))
 
-    # ==========================================================
-    # DESENHO DA INTERFACE E TELAS
-    # ==========================================================
-
+    # DESENHO DA INTERFACE (HUD), MENU, RANKING E TELAS FINAIS (LUIGI)
     if estado_jogo == "MENU":
-        # Desenha a tela_inicial.jpg e evita que ela seja apagada
-        if img_fundo_menu:
-            screen.blit(img_fundo_menu, (0, 0))
-            
-        
+        screen.blit(img_fundo_menu, (0, 0))
 
         pos_y_opcao = 420
         for indice in range(len(opcoes_menu)):
@@ -566,9 +574,8 @@ while True:
         screen.blit(instrucao, (1280 // 2 - instrucao.get_width() // 2, pos_y_opcao + 30))
 
     elif estado_jogo == "NOME":
-        if img_fundo_menu:
-            screen.blit(img_fundo_menu, (0, 0)) # Fundo na tela de nome também (opcional)
-        
+        screen.blit(img_fundo_menu, (0, 0))
+
         titulo = fonte_hud.render("Digite seu nome e aperte ENTER", True, (255, 255, 255))
         screen.blit(titulo, (1280 // 2 - titulo.get_width() // 2, 280))
 
