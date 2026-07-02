@@ -10,33 +10,28 @@ pygame.mixer.music.load("sounds/TRILHA SONORA/Soundtrack.mp3")
 pygame.mixer.music.set_volume(0.090)
 pygame.mixer.music.play(-1)
 
+
+pygame.mixer.set_num_channels(16)
+
 som_passos = pygame.mixer.Sound("sounds/PASSOS NA PEDRA/PASSO.mpeg")
 som_pulo = pygame.mixer.Sound("sounds/PULO/jump.mp3")
 som_moeda = pygame.mixer.Sound("sounds/COLETAR MOEDA/Picked Coin Echo.wav")
 som_aterrissagem = pygame.mixer.Sound("sounds/ATERRISSAGEM (LANDING AFTER JUMP)/ATERRISSAGEM.mpeg")
+som_siri = pygame.mixer.Sound("siri.mp3")
+som_lagosta = pygame.mixer.Sound("lagosta.mp3")
 
 som_passos.set_volume(0.4)
+
+# canal 1 é só dos passos, canal 2 é só do som de matar inimigo.
+# assim um som nunca corta o outro.
 canal_passos = pygame.mixer.Channel(1)
-
-try:
-    som_siri = pygame.mixer.Sound("siri.mp3")
-except Exception as erro:
-    print("AVISO: não consegui carregar siri.mp3 ->", erro)
-    som_siri = None
-
-try:
-    som_lagosta = pygame.mixer.Sound("lagosta.mp3")
-except Exception as erro:
-    print("AVISO: não consegui carregar lagosta.mp3 ->", erro)
-    som_lagosta = None
+canal_inimigos = pygame.mixer.Channel(2)
 
 def tocar_som_do_inimigo(tipo):
     if tipo == "siri":
-        if som_siri:
-            som_siri.play()
+        canal_inimigos.play(som_siri)
     elif tipo == "lagosta":
-        if som_lagosta:
-            som_lagosta.play()
+        canal_inimigos.play(som_lagosta)
 
 def atualizar_sistema_sonoro(jogador_movendo):
     if jogador_movendo:
@@ -45,6 +40,7 @@ def atualizar_sistema_sonoro(jogador_movendo):
     else:
         canal_passos.stop()
 
+# SISTEMA DE HUD, PONTUAÇÃO E REGRAS (LUIGI)
 pygame.font.init()
 fonte_hud = pygame.font.SysFont("courier", 35, bold=True)
 fonte_telas = pygame.font.SysFont("courier", 90, bold=True)
@@ -56,6 +52,7 @@ vida_maxima = 100
 
 estado_jogo = "MENU"
 
+# VARIÁVEIS DO MENU, NOME DO JOGADOR E RANKING (LUIGI)
 nome_jogador = ""
 pontuacao_salva = False
 arquivo_ranking = "ranking.txt"
@@ -63,24 +60,22 @@ arquivo_ranking = "ranking.txt"
 opcoes_menu = ["Jogar", "Sair"]
 menu_selecionado = 0
 
-limite_vitoria_x = 3500
 boss_morto = False
 tempo_queda = 0
 
+# IMAGEM BOLHA (LUIGI)
 img_bolha = pygame.image.load("coracao bolha.png")
 img_bolha = pygame.transform.scale(img_bolha, (30, 30))
 img_bolha.set_colorkey((255, 255, 255))
 
-try:
-    img_fundo_menu = pygame.image.load("tela_inicial.png")
-    img_fundo_menu = pygame.transform.scale(img_fundo_menu, (1280, 720))
-except Exception as erro:
-    print("AVISO: não consegui carregar tela_inicial.png ->", erro)
-    img_fundo_menu = None
+# IMAGEM DE FUNDO DO MENU (LUIGI)
+img_fundo_menu = pygame.image.load("tela_inicial.png")
+img_fundo_menu = pygame.transform.scale(img_fundo_menu, (1280, 720))
 
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 
+# FUNÇÕES DO RANKING: ORDENAR, CARREGAR E SALVAR A PONTUAÇÃO (LUIGI)
 def ordenar_ranking(lista):
     for i in range(len(lista)):
         for j in range(len(lista) - 1 - i):
@@ -205,25 +200,33 @@ def get_tile(col, lin):
 t_topo = get_tile(1, 0)
 t_fill = get_tile(1, 4)
 
+# MOEDA
+moeda_raw = pygame.image.load('moeda.png').convert_alpha()
+t_moeda = pygame.transform.scale(moeda_raw, (TILE, TILE))
+
 mapa = [
-    "                                                                ",
-    "                                                                ",
-    "                                                                ",
-    "                                                                ",
-    "                                                                ",
-    "                           PPP                                  ",
-    "                PP    PP                PPP           PPP       ",
-    "                                PP                              ",
-    "CCCCCCCCCC  CCC   CCCCCCCCCCCCCCC       CCCCCCCCCCCCCCCCCCCC",
-    "DDDDDDDDDD  DDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDD",
-    "DDDDDDDDDD  DDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDD",
-    "DDDDDDDDDD  DDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDD",
-    "DDDDDDDDDD  DDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDD",
+    "                                                              ",
+    "                                                              ",
+    "                                                              ",
+    "                                                              ",
+    "                                                              ",
+    "                          PPP                                 ",
+    "                PP     PP              M  PPP        PPP      ",
+    " M         M                M      PP              M          ",
+    "CCCCCCCCCCCCCC   CCCCCCCCCCCCCCC       CCCCCCCCCCCCCCCCCCCCCCC",
+    "DDDDDDDDDDDDDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDDDDD",
+    "DDDDDDDDDDDDDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDDDDD",
+    "DDDDDDDDDDDDDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDDDDD",
+    "DDDDDDDDDDDDDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDDDDD",
 ]
 
 largura_mapa = max(len(linha) for linha in mapa)
 mapa = [linha.ljust(largura_mapa) for linha in mapa]
+largura_mapa_px = largura_mapa * TILE
 
+moedas_coletadas = set()
+
+# LISTA DE INIMIGOS: SIRI E LAGOSTA (LUIGI)
 inimigos = [
     {
         "x": 750,
@@ -272,12 +275,19 @@ no_chao = True
 estava_no_ar = False
 virado_direita = True
 
+# FADE / TROCA DE MAPA
+fade_alpha = 0
+fadendo = False
+fade_surface = pygame.Surface((1280, 720))
+fade_surface.fill((0, 0, 0))
+
 while True:
     for evento in pygame.event.get():
         if evento.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
 
+        # EVENTOS DO MENU, NOME DO JOGADOR E RANKING (LUIGI)
         if evento.type == pygame.KEYDOWN:
 
             if estado_jogo == "MENU":
@@ -304,6 +314,9 @@ while True:
                     velocidadechar1_y = 0
                     boss_morto = False
                     pontuacao_salva = False
+                    fade_alpha = 0
+                    fadendo = False
+                    tempo_ultimo_dano = pygame.time.get_ticks()
                     for inimigo in inimigos:
                         inimigo["x"] = inimigo["inicio"]
                         inimigo["dir"] = 1
@@ -329,6 +342,7 @@ while True:
     teclas = pygame.key.get_pressed()
     movendo = False
 
+    # LÓGICA DE TEMPORIZADOR DE QUEDA (LUIGI)
     if estado_jogo == "TELA_QUEDA":
         if pygame.time.get_ticks() - tempo_queda > 2000:
             estado_jogo = "JOGANDO"
@@ -342,6 +356,7 @@ while True:
                 inimigo["dir"] = 1
                 inimigo["vivo"] = True
 
+    # LÓGICA DE DANO, QUEDA E FIM DE JOGO (LUIGI)
     if estado_jogo == "JOGANDO":
 
         if char1_y > 800:
@@ -374,21 +389,24 @@ while True:
             estado_jogo = "DERROTA"
             pontuacao = 0
 
-        elif personagem_x >= limite_vitoria_x:
-            estado_jogo = "VITORIA"
-            if coracoes == 3 and boss_morto:
-                pontuacao += 300
+        # TROCA DE MAPA: ao chegar no limite, começa o fade em vez de ir direto pra vitória
+        elif personagem_x >= largura_mapa_px * 3 - personagem_parado.get_width() and not fadendo:
+            fadendo = True
 
-        if teclas[pygame.K_d]:
-            personagem_x += 300 * dt / 1000
-            virado_direita = True
-            movendo = True
+        if not fadendo:
+            if teclas[pygame.K_d]:
+                personagem_x += 300 * dt / 1000
+                virado_direita = True
+                movendo = True
 
-        if teclas[pygame.K_a]:
-            personagem_x -= 300 * dt / 1000
-            virado_direita = False
-            movendo = True
+            if teclas[pygame.K_a]:
+                personagem_x -= 300 * dt / 1000
+                virado_direita = False
+                movendo = True
+        else:
+            velocidadechar1_y = 0
 
+        # MOVIMENTAÇÃO E ANIMAÇÃO DOS INIMIGOS (LUIGI)
         for inimigo in inimigos:
             inimigo["x"] += inimigo["vel"] * inimigo["dir"]
 
@@ -410,8 +428,10 @@ while True:
                 inimigo["dir"] = 1
 
     personagem_x = max(0, personagem_x)
+    personagem_x = min(personagem_x, largura_mapa_px * 3 - personagem_parado.get_width())
 
     camera_x = max(0, personagem_x - 200)
+    camera_x = min(camera_x, largura_mapa_px * 3 - 1280)
     char1_x = personagem_x - camera_x
 
     coluna_inicial = int(camera_x // TILE)
@@ -428,6 +448,7 @@ while True:
             elif cel == 'D':
                 collider_list.append(pygame.Rect((coluna_inicial + col_tela) * TILE, y, TILE, TILE))
 
+    #colisão horizontal
     collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
     for bloco in collider_list:
         if collider_personagem.colliderect(bloco):
@@ -437,6 +458,7 @@ while True:
                 personagem_x = bloco.right
             collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
 
+    # COLISÃO DO JOGADOR COM OS INIMIGOS: PISÃO MATA, TOQUE LATERAL TIRA VIDA (LUIGI)
     if estado_jogo == "JOGANDO":
         for inimigo in inimigos:
             if not inimigo["vivo"]:
@@ -460,11 +482,13 @@ while True:
                         velocidadechar1_y = -5
 
     camera_x = max(0, personagem_x - 200)
+    camera_x = min(camera_x, largura_mapa_px * 3 - 1280)
     char1_x = personagem_x - camera_x
 
     velocidadechar1_y += gravidade
     char1_y += velocidadechar1_y
 
+    #colisão vertical
     estava_no_ar = not no_chao
     no_chao = False
     collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
@@ -483,7 +507,7 @@ while True:
             collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
             encostando = pygame.Rect(collider_personagem.x, collider_personagem.y, collider_personagem.width, collider_personagem.height + 4)
 
-    if estado_jogo == "JOGANDO" and teclas[pygame.K_SPACE] and no_chao:
+    if estado_jogo == "JOGANDO" and teclas[pygame.K_SPACE] and no_chao and not fadendo:
         velocidadechar1_y = forca_pulo
         som_pulo.play()
 
@@ -492,6 +516,22 @@ while True:
     else:
         atualizar_sistema_sonoro(movendo and no_chao)
 
+    # COLETA DE MOEDAS
+    if estado_jogo == "JOGANDO":
+        for col_tela in range(colunas_finais):
+            col_mapa = (coluna_inicial + col_tela) % largura_mapa
+            coluna_mundo = coluna_inicial + col_tela
+            for i, linha in enumerate(mapa):
+                cel = linha[col_mapa]
+                if cel == 'M':
+                    chave = (coluna_mundo, i)
+                    if chave not in moedas_coletadas:
+                        rect_moeda = pygame.Rect(coluna_mundo * TILE, i * TILE, TILE, TILE)
+                        if collider_personagem.colliderect(rect_moeda):
+                            moedas_coletadas.add(chave)
+                            som_moeda.play()
+
+    # animacao do personagem
     deslocamento_x_pulo = 0
     deslocamento_y_pulo = 0
     if not no_chao:
@@ -527,7 +567,8 @@ while True:
 
         for col_tela in range(colunas_finais):
             col_mapa = (coluna_inicial + col_tela) % largura_mapa
-            x = (coluna_inicial + col_tela) * TILE - int(camera_x)
+            coluna_mundo = coluna_inicial + col_tela
+            x = coluna_mundo * TILE - int(camera_x)
             for i, linha in enumerate(mapa):
                 cel = linha[col_mapa]
                 y = i * TILE
@@ -537,6 +578,8 @@ while True:
                     screen.blit(t_fill, (x, y))
                 elif cel == 'P':
                     screen.blit(t_topo, (x, y))
+                elif cel == 'M' and (coluna_mundo, i) not in moedas_coletadas:
+                    screen.blit(t_moeda, (x, y + 20))
 
         for inimigo in inimigos:
             if inimigo["vivo"]:
@@ -547,9 +590,9 @@ while True:
 
         screen.blit(imagem_atual, (char1_x + deslocamento_x_pulo, char1_y + deslocamento_y_pulo))
 
+    # DESENHO DA INTERFACE (HUD), MENU, RANKING E TELAS FINAIS (LUIGI)
     if estado_jogo == "MENU":
-        if img_fundo_menu:
-            screen.blit(img_fundo_menu, (0, 0))
+        screen.blit(img_fundo_menu, (0, 0))
 
         pos_y_opcao = 420
         for indice in range(len(opcoes_menu)):
@@ -568,8 +611,7 @@ while True:
         screen.blit(instrucao, (1280 // 2 - instrucao.get_width() // 2, pos_y_opcao + 30))
 
     elif estado_jogo == "NOME":
-        if img_fundo_menu:
-            screen.blit(img_fundo_menu, (0, 0))
+        screen.blit(img_fundo_menu, (0, 0))
 
         titulo = fonte_hud.render("Digite seu nome e aperte ENTER", True, (255, 255, 255))
         screen.blit(titulo, (1280 // 2 - titulo.get_width() // 2, 280))
@@ -624,5 +666,16 @@ while True:
 
         texto_voltar = fonte_hud.render("ENTER - Ver Ranking", True, (255, 255, 255))
         screen.blit(texto_voltar, (1280 // 2 - texto_voltar.get_width() // 2, 720 // 2 + 130))
+
+    # FADE / TROCA DE MAPA
+    if fadendo:
+        fade_alpha = min(255, fade_alpha + 3)
+        fade_surface.set_alpha(fade_alpha)
+        screen.blit(fade_surface, (0, 0))
+        if fade_alpha >= 255:
+            pygame.time.wait(500)
+            canal_passos.stop()
+            exec(open("mapa_boss.py").read())
+            sys.exit()
 
     pygame.display.update()
