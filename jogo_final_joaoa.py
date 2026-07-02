@@ -74,8 +74,8 @@ mapa = [
     "                                                              ",
     "                                                              ",
     "                          PPP                                 ",
-    "                PP     PP                 PPP        PPP      ",
-    "           G                       PP              G          ",
+    "                PP     PP             G   PPP        PPP      ",
+    "           G                G      PP              G          ",
     "CCCCCCCCCCCCCC   CCCCCCCCCCCCCCC       CCCCCCCCCCCCCCCCCCCCCCC",
     "DDDDDDDDDDDDDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDDDDD",
     "DDDDDDDDDDDDDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDDDDD",
@@ -250,7 +250,7 @@ while True:
 
     screen.blit(imagem_atual, (char1_x + deslocamento_x_pulo, char1_y + deslocamento_y_pulo))
 
-    # fade to black
+    #fade
     if fadendo:
         fade_alpha = min(255, fade_alpha + 3)
         fade_surface.set_alpha(fade_alpha)
