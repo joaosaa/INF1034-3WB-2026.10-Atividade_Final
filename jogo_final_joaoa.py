@@ -65,7 +65,9 @@ def get_tile(col, lin):
 
 t_topo = get_tile(1, 0) 
 t_fill = get_tile(1, 4)
-t_diamante = pygame.transform.scale(get_tile(1, 10), (48, 48))
+
+moeda_raw = pygame.image.load('moeda.png').convert_alpha()
+t_moeda = pygame.transform.scale(moeda_raw, (TILE, TILE))
 
 mapa = [
     "                                                              ",
@@ -74,8 +76,8 @@ mapa = [
     "                                                              ",
     "                                                              ",
     "                          PPP                                 ",
-    "                PP     PP                 PPP        PPP      ",
-    "           G                       PP              G          ",
+    "                PP     PP              M  PPP        PPP      ",
+    " M         M                M      PP              M          ",
     "CCCCCCCCCCCCCC   CCCCCCCCCCCCCCC       CCCCCCCCCCCCCCCCCCCCCCC",
     "DDDDDDDDDDDDDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDDDDD",
     "DDDDDDDDDDDDDD   DDDDDDDDDDDDDDD       DDDDDDDDDDDDDDDDDDDDDDD",
@@ -88,7 +90,7 @@ mapa = [linha.ljust(largura_mapa) for linha in mapa]
 largura_mapa_px = largura_mapa * TILE
 largura_mapa_px = largura_mapa * TILE
 
-diamantes_coletados = set()
+moedas_coletadas = set()
 
 #movimentação do personagem
 personagem_x = 200 
@@ -189,18 +191,18 @@ while True:
     if teclas[pygame.K_SPACE] and no_chao and not fadendo:
         velocidadechar1_y = forca_pulo
 
-    # coleta de diamantes
+    # coleta de moedas
     for col_tela in range(colunas_finais):
         col_mapa = (coluna_inicial + col_tela) % largura_mapa
         coluna_mundo = coluna_inicial + col_tela
         for i, linha in enumerate(mapa):
             cel = linha[col_mapa]
-            if cel == 'G':
+            if cel == 'M':
                 chave = (coluna_mundo, i)
-                if chave not in diamantes_coletados:
-                    rect_diamante = pygame.Rect(coluna_mundo * TILE, i * TILE, TILE, TILE)
-                    if collider_personagem.colliderect(rect_diamante):
-                        diamantes_coletados.add(chave)
+                if chave not in moedas_coletadas:
+                    rect_moeda = pygame.Rect(coluna_mundo * TILE, i * TILE, TILE, TILE)
+                    if collider_personagem.colliderect(rect_moeda):
+                        moedas_coletadas.add(chave)
 
     # animação do personagem
     deslocamento_x_pulo = 0
@@ -243,10 +245,8 @@ while True:
                 screen.blit(t_fill, (x, y))
             elif cel == 'P':
                 screen.blit(t_topo, (x, y))
-            elif cel == 'G' and (coluna_mundo, i) not in diamantes_coletados:
-                offset_x = (TILE - 48) // 2
-                offset_y = TILE - 48
-                screen.blit(t_diamante, (x + offset_x, y + offset_y))
+            elif cel == 'M' and (coluna_mundo, i) not in moedas_coletadas:
+                screen.blit(t_moeda, (x, y + 20))
 
     screen.blit(imagem_atual, (char1_x + deslocamento_x_pulo, char1_y + deslocamento_y_pulo))
 
