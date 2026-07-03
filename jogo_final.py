@@ -42,8 +42,8 @@ def atualizar_sistema_sonoro(jogador_movendo):
 
 # SISTEMA DE HUD, PONTUAÇÃO E REGRAS (LUIGI)
 pygame.font.init()
-fonte_hud = pygame.font.SysFont("courier", 35, bold=True)
-fonte_telas = pygame.font.SysFont("courier", 90, bold=True)
+fonte_hud = pygame.font.Font("pixelletter.ttf", 35)
+fonte_telas = pygame.font.Font("pixelletter.ttf", 90)
 
 pontuacao = 0
 coracoes = 3
@@ -234,164 +234,67 @@ img_tridente = img_tridente_bruta.subsurface(pygame.Rect(474, 112, 307, 1008)).c
 img_tridente = pygame.transform.scale(img_tridente, (40, 130))
 TRIDENTE_RECT = pygame.Rect(11400, 416 - 130, 40, 130)
 
-# LISTA DE INIMIGOS: SIRI E LAGOSTA (LUIGI)
+def criar_inimigo(tipo, x, y, inicio, fim):
+    if tipo == "caranguejo":
+        return {
+            "x": x,
+            "y": y,
+            "tipo": tipo,
+            "inicio": inicio,
+            "fim": fim,
+            "vel": 2,
+            "dir": 1,
+            "imagem": frames_caranguejo[0],
+            "frames": frames_caranguejo,
+            "frame_atual": 0,
+            "contador": 0,
+            "hitbox": pygame.Rect(0,0,75,30),
+            "offset_y": 130,
+            "vivo": True
+        }
+    if tipo == "lagosta":
+        return {
+            "x": x,
+            "y": y,
+            "tipo": tipo,
+            "inicio": inicio,
+            "fim": fim,
+            "vel": 2,
+            "dir": -1,
+            "imagem": frames_lagosta[0],
+            "frames": frames_lagosta,
+            "frame_atual": 0,
+            "contador": 0,
+            "hitbox": pygame.Rect(0,0,108,25),
+            "offset_y": 0,
+            "vivo": True
+        }
+    if tipo == "boss":
+        return {
+            "x": x,
+            "y": y,
+            "inicio": x,
+            "fim": x,
+            "vel": 0,
+            "dir": 1,
+            "imagem": frames_boss[0],
+            "frames": frames_boss,
+            "frame_atual": 0,
+            "contador": 0,
+            "hitbox": pygame.Rect(0,0,180,100),
+            "offset_y": 0,
+            "vivo": True
+        }
+#inimigos
 inimigos = [
-    {
-        "x": 750,
-        "y": 377,
-        "inicio": 750,
-        "fim": 890,
-        "vel": 2,
-        "dir": 1,
-        "imagem": frames_caranguejo[0],
-        "frames": frames_caranguejo,
-        "frame_atual": 0,
-        "contador": 0,
-        "dx_hitbox": 2,
-        "dy_hitbox": 130,
-        "hitbox": pygame.Rect(0, 0, 75, 25),
-        "vivo": True,
-        "tipo": "siri"
-    },
-    {
-        "x": 1100,
-        "y": 485,
-        "inicio": 1100,
-        "fim": 1500,
-        "vel": 2,
-        "dir": -1,
-        "imagem": frames_lagosta[0],
-        "frames": frames_lagosta,
-        "frame_atual": 0,
-        "contador": 0,
-        "dx_hitbox": 10,
-        "dy_hitbox": 0,
-        "hitbox": pygame.Rect(0, 0, 108, 25),
-        "vivo": True,
-        "tipo": "lagosta"
-    },
-
-    # INIMIGOS EXTRAS ESPALHADOS PELO MAPA (LUIGI)
-    {
-        "x": 2950,
-        "y": 377,
-        "inicio": 2950,
-        "fim": 3250,
-        "vel": 2,
-        "dir": 1,
-        "imagem": frames_caranguejo[0],
-        "frames": frames_caranguejo,
-        "frame_atual": 0,
-        "contador": 0,
-        "dx_hitbox": 2,
-        "dy_hitbox": 130,
-        "hitbox": pygame.Rect(0, 0, 75, 25),
-        "vivo": True,
-        "tipo": "siri"
-    },
-    {
-        "x": 4100,
-        "y": 485,
-        "inicio": 4100,
-        "fim": 4450,
-        "vel": 2,
-        "dir": 1,
-        "imagem": frames_lagosta[0],
-        "frames": frames_lagosta,
-        "frame_atual": 0,
-        "contador": 0,
-        "dx_hitbox": 10,
-        "dy_hitbox": 0,
-        "hitbox": pygame.Rect(0, 0, 108, 25),
-        "vivo": True,
-        "tipo": "lagosta"
-    },
-    {
-        "x": 5200,
-        "y": 377,
-        "inicio": 5200,
-        "fim": 5500,
-        "vel": 2,
-        "dir": 1,
-        "imagem": frames_caranguejo[0],
-        "frames": frames_caranguejo,
-        "frame_atual": 0,
-        "contador": 0,
-        "dx_hitbox": 2,
-        "dy_hitbox": 130,
-        "hitbox": pygame.Rect(0, 0, 75, 25),
-        "vivo": True,
-        "tipo": "siri"
-    },
-    {
-        "x": 6700,
-        "y": 485,
-        "inicio": 6700,
-        "fim": 7050,
-        "vel": 2,
-        "dir": 1,
-        "imagem": frames_lagosta[0],
-        "frames": frames_lagosta,
-        "frame_atual": 0,
-        "contador": 0,
-        "dx_hitbox": 10,
-        "dy_hitbox": 0,
-        "hitbox": pygame.Rect(0, 0, 108, 25),
-        "vivo": True,
-        "tipo": "lagosta"
-    },
-    {
-        "x": 8050,
-        "y": 377,
-        "inicio": 8050,
-        "fim": 8350,
-        "vel": 2,
-        "dir": 1,
-        "imagem": frames_caranguejo[0],
-        "frames": frames_caranguejo,
-        "frame_atual": 0,
-        "contador": 0,
-        "dx_hitbox": 2,
-        "dy_hitbox": 130,
-        "hitbox": pygame.Rect(0, 0, 75, 25),
-        "vivo": True,
-        "tipo": "siri"
-    },
-    {
-        "x": 9150,
-        "y": 485,
-        "inicio": 9150,
-        "fim": 9500,
-        "vel": 2,
-        "dir": 1,
-        "imagem": frames_lagosta[0],
-        "frames": frames_lagosta,
-        "frame_atual": 0,
-        "contador": 0,
-        "dx_hitbox": 10,
-        "dy_hitbox": 0,
-        "hitbox": pygame.Rect(0, 0, 108, 25),
-        "vivo": True,
-        "tipo": "lagosta"
-    },
-    {
-        "x": 10600,
-        "y": 377,
-        "inicio": 10600,
-        "fim": 10900,
-        "vel": 2,
-        "dir": 1,
-        "imagem": frames_caranguejo[0],
-        "frames": frames_caranguejo,
-        "frame_atual": 0,
-        "contador": 0,
-        "dx_hitbox": 2,
-        "dy_hitbox": 130,
-        "hitbox": pygame.Rect(0, 0, 75, 25),
-        "vivo": True,
-        "tipo": "siri"
-    }
-]
+    criar_inimigo("caranguejo",750,377,750,890),
+    criar_inimigo("caranguejo",1140,377,1140,1500),
+    criar_inimigo("caranguejo",1650,185,1650,1790),
+    criar_inimigo("caranguejo",2850,377,2850,3050),
+    criar_inimigo("caranguejo", 3100, 377, 3100, 3350),
+    criar_inimigo("caranguejo", 3800, 377, 3800, 4000),
+    criar_inimigo("boss", 300, 300, 300, 200)
+    ]
 
 #movimentação do personagem
 personagem_x = 200
@@ -594,7 +497,7 @@ while True:
             if not inimigo["vivo"]:
                 continue
             if collider_personagem.colliderect(inimigo["hitbox"]):
-                if velocidadechar1_y > 0 and collider_personagem.bottom < inimigo["hitbox"].top + 8:
+                if velocidadechar1_y > 0 and collider_personagem.bottom < inimigo["hitbox"].top + 15:
                     inimigo["vivo"] = False
                     tocar_som_do_inimigo(inimigo["tipo"])
                     pontuacao += 100
@@ -740,17 +643,35 @@ while True:
         for indice in range(len(opcoes_menu)):
             opcao = opcoes_menu[indice]
             if indice == menu_selecionado:
-                cor = (27, 28, 27)
+                cor = (0, 255, 239)
                 texto = "> " + opcao + " <"
             else:
                 cor = (255, 255, 255)
                 texto = opcao
+            largura = 300
+            altura = 60
+            x = 1280 // 2 - largura // 2
+            y = pos_y_opcao
             item_render = fonte_hud.render(texto, True, cor)
-            screen.blit(item_render, (1280 // 2 - item_render.get_width() // 2, pos_y_opcao))
-            pos_y_opcao += 60
+            if indice == menu_selecionado:
+              cor_caixa = (2, 3, 31)
+              cor_borda = (255, 255, 255)
+            else:
+             cor_caixa = (15, 15, 15)
+             cor_borda = (80, 80, 80)
+            pygame.draw.rect(screen, cor_caixa, (x, y, largura, altura), border_radius=10)
+            pygame.draw.rect(screen, cor_borda, (x, y, largura, altura), 3, border_radius=10)
+            screen.blit(item_render, (x + largura // 2 - item_render.get_width() // 2, y + altura // 2 - item_render.get_height() // 2))
+            pos_y_opcao += 80
 
-        instrucao = fonte_hud.render("Setas para navegar - ENTER para confirmar", True, (255, 215, 0))
-        screen.blit(instrucao, (1280 // 2 - instrucao.get_width() // 2, pos_y_opcao + 30))
+        instrucao = fonte_hud.render("Setas para navegar - ENTER para confirmar", True, (255, 255, 255))
+        largura_inst = instrucao.get_width() + 30
+        altura_inst = instrucao.get_height() + 15
+        x_inst = 1280 // 2 - largura_inst // 2
+        y_inst = pos_y_opcao + 25
+        pygame.draw.rect(screen, (2, 3, 31), (x_inst, y_inst, largura_inst, altura_inst), border_radius=10)
+        pygame.draw.rect(screen, (255, 255, 255), (x_inst, y_inst, largura_inst, altura_inst), 2, border_radius=10)
+        screen.blit(instrucao, (x_inst + 15, y_inst + 5))
 
     elif estado_jogo == "NOME":
         screen.blit(img_fundo_menu, (0, 0))
