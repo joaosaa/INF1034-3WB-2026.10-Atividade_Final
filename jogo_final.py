@@ -15,17 +15,18 @@ pygame.mixer.set_num_channels(16)
 
 som_passos = pygame.mixer.Sound("sounds/PASSOS NA PEDRA/PASSO.mpeg")
 som_pulo = pygame.mixer.Sound("sounds/PULO/jump.mp3")
-som_moeda = pygame.mixer.Sound("sounds/COLETAR MOEDA/Picked Coin Echo.wav")
+som_moeda = pygame.mixer.Sound("sounds/COLETAR MOEDA/Picked Coin Echo.mp3")
 som_aterrissagem = pygame.mixer.Sound("sounds/ATERRISSAGEM (LANDING AFTER JUMP)/ATERRISSAGEM.mpeg")
-som_siri = pygame.mixer.Sound("siri.mp3")
-som_lagosta = pygame.mixer.Sound("lagosta.mp3")
+som_siri = pygame.mixer.Sound("sounds\COLETAR MOEDA\siri.mp3")
+som_lagosta = pygame.mixer.Sound("sounds\COLETAR MOEDA\lagosta.mp3")
 
 som_passos.set_volume(0.4)
 
-# canal 1 é só dos passos, canal 2 é só do som de matar inimigo.
-# assim um som nunca corta o outro.
+# canal 1 é só dos passos, canal 2 é só do som de matar inimigo,
+# canal 3 é só da moeda. assim nenhum som corta o outro.
 canal_passos = pygame.mixer.Channel(1)
 canal_inimigos = pygame.mixer.Channel(2)
+canal_moeda = pygame.mixer.Channel(3)
 
 def tocar_som_do_inimigo(tipo):
     if tipo == "siri":
@@ -226,6 +227,14 @@ largura_mapa_px = largura_mapa * TILE
 
 moedas_coletadas = set()
 
+# TRIDENTE: arma pra usar contra o boss, fica em cima da última plataforma
+# do mapa, pouco antes do fade pra tela do boss (LUIGI)
+tem_tridente = False
+img_tridente_bruta = pygame.image.load('tridente.png').convert_alpha()
+img_tridente = img_tridente_bruta.subsurface(pygame.Rect(474, 112, 307, 1008)).copy()
+img_tridente = pygame.transform.scale(img_tridente, (40, 130))
+TRIDENTE_RECT = pygame.Rect(11400, 416 - 130, 40, 130)
+
 # LISTA DE INIMIGOS: SIRI E LAGOSTA (LUIGI)
 inimigos = [
     {
@@ -261,6 +270,127 @@ inimigos = [
         "hitbox": pygame.Rect(0, 0, 108, 25),
         "vivo": True,
         "tipo": "lagosta"
+    },
+
+    # INIMIGOS EXTRAS ESPALHADOS PELO MAPA (LUIGI)
+    {
+        "x": 2950,
+        "y": 377,
+        "inicio": 2950,
+        "fim": 3250,
+        "vel": 2,
+        "dir": 1,
+        "imagem": frames_caranguejo[0],
+        "frames": frames_caranguejo,
+        "frame_atual": 0,
+        "contador": 0,
+        "dx_hitbox": 2,
+        "dy_hitbox": 130,
+        "hitbox": pygame.Rect(0, 0, 75, 25),
+        "vivo": True,
+        "tipo": "siri"
+    },
+    {
+        "x": 4100,
+        "y": 485,
+        "inicio": 4100,
+        "fim": 4450,
+        "vel": 2,
+        "dir": 1,
+        "imagem": frames_lagosta[0],
+        "frames": frames_lagosta,
+        "frame_atual": 0,
+        "contador": 0,
+        "dx_hitbox": 10,
+        "dy_hitbox": 0,
+        "hitbox": pygame.Rect(0, 0, 108, 25),
+        "vivo": True,
+        "tipo": "lagosta"
+    },
+    {
+        "x": 5200,
+        "y": 377,
+        "inicio": 5200,
+        "fim": 5500,
+        "vel": 2,
+        "dir": 1,
+        "imagem": frames_caranguejo[0],
+        "frames": frames_caranguejo,
+        "frame_atual": 0,
+        "contador": 0,
+        "dx_hitbox": 2,
+        "dy_hitbox": 130,
+        "hitbox": pygame.Rect(0, 0, 75, 25),
+        "vivo": True,
+        "tipo": "siri"
+    },
+    {
+        "x": 6700,
+        "y": 485,
+        "inicio": 6700,
+        "fim": 7050,
+        "vel": 2,
+        "dir": 1,
+        "imagem": frames_lagosta[0],
+        "frames": frames_lagosta,
+        "frame_atual": 0,
+        "contador": 0,
+        "dx_hitbox": 10,
+        "dy_hitbox": 0,
+        "hitbox": pygame.Rect(0, 0, 108, 25),
+        "vivo": True,
+        "tipo": "lagosta"
+    },
+    {
+        "x": 8050,
+        "y": 377,
+        "inicio": 8050,
+        "fim": 8350,
+        "vel": 2,
+        "dir": 1,
+        "imagem": frames_caranguejo[0],
+        "frames": frames_caranguejo,
+        "frame_atual": 0,
+        "contador": 0,
+        "dx_hitbox": 2,
+        "dy_hitbox": 130,
+        "hitbox": pygame.Rect(0, 0, 75, 25),
+        "vivo": True,
+        "tipo": "siri"
+    },
+    {
+        "x": 9150,
+        "y": 485,
+        "inicio": 9150,
+        "fim": 9500,
+        "vel": 2,
+        "dir": 1,
+        "imagem": frames_lagosta[0],
+        "frames": frames_lagosta,
+        "frame_atual": 0,
+        "contador": 0,
+        "dx_hitbox": 10,
+        "dy_hitbox": 0,
+        "hitbox": pygame.Rect(0, 0, 108, 25),
+        "vivo": True,
+        "tipo": "lagosta"
+    },
+    {
+        "x": 10600,
+        "y": 377,
+        "inicio": 10600,
+        "fim": 10900,
+        "vel": 2,
+        "dir": 1,
+        "imagem": frames_caranguejo[0],
+        "frames": frames_caranguejo,
+        "frame_atual": 0,
+        "contador": 0,
+        "dx_hitbox": 2,
+        "dy_hitbox": 130,
+        "hitbox": pygame.Rect(0, 0, 75, 25),
+        "vivo": True,
+        "tipo": "siri"
     }
 ]
 
@@ -316,6 +446,7 @@ while True:
                     pontuacao_salva = False
                     fade_alpha = 0
                     fadendo = False
+                    tem_tridente = False
                     tempo_ultimo_dano = pygame.time.get_ticks()
                     for inimigo in inimigos:
                         inimigo["x"] = inimigo["inicio"]
@@ -529,7 +660,14 @@ while True:
                         rect_moeda = pygame.Rect(coluna_mundo * TILE, i * TILE, TILE, TILE)
                         if collider_personagem.colliderect(rect_moeda):
                             moedas_coletadas.add(chave)
-                            som_moeda.play()
+                            pontuacao += 50
+                            canal_moeda.play(som_moeda)
+
+    # PEGAR O TRIDENTE (LUIGI)
+    if estado_jogo == "JOGANDO" and not tem_tridente:
+        if collider_personagem.colliderect(TRIDENTE_RECT):
+            tem_tridente = True
+            canal_moeda.play(som_moeda)
 
     # animacao do personagem
     deslocamento_x_pulo = 0
@@ -587,6 +725,11 @@ while True:
                 if inimigo["dir"] == 1:
                     img = pygame.transform.flip(img, True, False)
                 screen.blit(img, (inimigo["x"] - camera_x, inimigo["y"]))
+
+        if not tem_tridente:
+            tx = TRIDENTE_RECT.x - int(camera_x)
+            ty = TRIDENTE_RECT.y
+            screen.blit(img_tridente, (tx, ty))
 
         screen.blit(imagem_atual, (char1_x + deslocamento_x_pulo, char1_y + deslocamento_y_pulo))
 
@@ -675,7 +818,7 @@ while True:
         if fade_alpha >= 255:
             pygame.time.wait(500)
             canal_passos.stop()
-            exec(open("mapa_boss.py").read())
+            exec(open("mapa_boss.py", encoding="utf-8").read())
             sys.exit()
 
     pygame.display.update()

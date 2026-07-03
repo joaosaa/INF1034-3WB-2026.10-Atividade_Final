@@ -1,6 +1,13 @@
 import pygame, sys
 
-pygame.init()
+# NÃO chamar pygame.init() de novo aqui: o processo já está com tudo
+# inicializado desde o arquivo principal (mesmo exec). Reinicializar
+# reabre o dispositivo de áudio e quebra os sons já carregados (LUIGI)
+
+# TRILHA SONORA DO BOSS (LUIGI)
+pygame.mixer.music.load("sounds\TRILHA SONORA\FINAL BOSS\Final Boss.mp3")
+pygame.mixer.music.set_volume(1.5)
+pygame.mixer.music.play(-1)
 
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
@@ -146,6 +153,7 @@ while True:
     char1_y += velocidadechar1_y
 
     #colisão vertical
+    estava_no_ar = not no_chao
     no_chao = False
     collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
     encostando = pygame.Rect(collider_personagem.x, collider_personagem.y, collider_personagem.width, collider_personagem.height + 4)
@@ -155,12 +163,18 @@ while True:
                 char1_y = bloco.top - personagem_parado.get_height()
                 velocidadechar1_y = 0
                 no_chao = True
+                if estava_no_ar:
+                    som_aterrissagem.play()
             else:
                 char1_y = bloco.bottom
                 velocidadechar1_y = 0
 
     if teclas[pygame.K_SPACE] and no_chao:
         velocidadechar1_y = forca_pulo
+        som_pulo.play()
+
+    # SOM DE PASSOS, REAPROVEITANDO O SISTEMA JÁ CRIADO NO ARQUIVO PRINCIPAL (LUIGI)
+    atualizar_sistema_sonoro(movendo and no_chao)
 
     # animação do personagem
     deslocamento_x_pulo = 0
