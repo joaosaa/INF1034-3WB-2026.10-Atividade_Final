@@ -249,43 +249,67 @@ img_tridente = img_tridente_bruta.subsurface(pygame.Rect(474, 112, 307, 1008)).c
 img_tridente = pygame.transform.scale(img_tridente, (40, 130))
 TRIDENTE_RECT = pygame.Rect(11400, 416 - 130, 40, 130)
 
-# LISTA DE INIMIGOS: SIRI E LAGOSTA (LUIGI)
+def criar_inimigo(tipo, x, y, inicio, fim):
+    if tipo == "caranguejo":
+        return {
+            "x": x,
+            "y": y,
+            "tipo": tipo,
+            "inicio": inicio,
+            "fim": fim,
+            "vel": 2,
+            "dir": 1,
+            "imagem": frames_caranguejo[0],
+            "frames": frames_caranguejo,
+            "frame_atual": 0,
+            "contador": 0,
+            "hitbox": pygame.Rect(0,0,75,30),
+            "offset_y": 130,
+            "vivo": True
+        }
+    if tipo == "lagosta":
+        return {
+            "x": x,
+            "y": y,
+            "tipo": tipo,
+            "inicio": inicio,
+            "fim": fim,
+            "vel": 2,
+            "dir": -1,
+            "imagem": frames_lagosta[0],
+            "frames": frames_lagosta,
+            "frame_atual": 0,
+            "contador": 0,
+            "hitbox": pygame.Rect(0,0,108,25),
+            "offset_y": 0,
+            "vivo": True
+        }
+    if tipo == "boss":
+        return {
+            "x": x,
+            "y": y,
+            "inicio": x,
+            "fim": x,
+            "vel": 0,
+            "dir": 1,
+            "imagem": frames_boss[0],
+            "frames": frames_boss,
+            "frame_atual": 0,
+            "contador": 0,
+            "hitbox": pygame.Rect(0,0,180,100),
+            "offset_y": 0,
+            "vivo": True
+        }
+#inimigos
 inimigos = [
-    {
-        "x": 750,
-        "y": 377,
-        "inicio": 750,
-        "fim": 890,
-        "vel": 2,
-        "dir": 1,
-        "imagem": frames_caranguejo[0],
-        "frames": frames_caranguejo,
-        "frame_atual": 0,
-        "contador": 0,
-        "dx_hitbox": 2,
-        "dy_hitbox": 130,
-        "hitbox": pygame.Rect(0, 0, 75, 25),
-        "vivo": True,
-        "tipo": "siri"
-    },
-    {
-        "x": 1100,
-        "y": 485,
-        "inicio": 1100,
-        "fim": 1500,
-        "vel": 2,
-        "dir": -1,
-        "imagem": frames_lagosta[0],
-        "frames": frames_lagosta,
-        "frame_atual": 0,
-        "contador": 0,
-        "dx_hitbox": 10,
-        "dy_hitbox": 0,
-        "hitbox": pygame.Rect(0, 0, 108, 25),
-        "vivo": True,
-        "tipo": "lagosta"
-    }
-]
+    criar_inimigo("caranguejo",750,377,750,890),
+    criar_inimigo("caranguejo",1140,377,1140,1500),
+    criar_inimigo("caranguejo",1650,185,1650,1790),
+    criar_inimigo("caranguejo",2850,377,2850,3050),
+    criar_inimigo("caranguejo", 3100, 377, 3100, 3350),
+    criar_inimigo("caranguejo", 3800, 377, 3800, 4000),
+    criar_inimigo("boss", 300, 300, 300, 200)
+    ]
 
 #movimentação do personagem
 personagem_x = 200
