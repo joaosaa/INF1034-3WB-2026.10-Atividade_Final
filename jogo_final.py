@@ -3,6 +3,7 @@ import pygame, sys
 pygame.init()
 pygame.mixer.init()
 pygame.display.set_caption("Deepstrand")
+
 tempo_ultimo_dano = 0
 
 pygame.mixer.music.load("sounds/TRILHA SONORA/Soundtrack.mp3")
@@ -28,7 +29,7 @@ canal_inimigos = pygame.mixer.Channel(2)
 canal_moeda = pygame.mixer.Channel(3)
 
 def tocar_som_do_inimigo(tipo):
-    if tipo == "siri":
+    if tipo == "caranguejo":
         canal_inimigos.play(som_siri)
     elif tipo == "lagosta":
         canal_inimigos.play(som_lagosta)
@@ -170,7 +171,6 @@ largura_lagosta = spritesheet_lagosta.get_width()
 altura_lagosta = spritesheet_lagosta.get_height()
 num_frames_lagosta = 7
 frame_w_lagosta = largura_lagosta // num_frames_lagosta
-
 frames_lagosta = []
 for i in range(num_frames_lagosta):
     x_inicio = i * frame_w_lagosta
@@ -178,6 +178,21 @@ for i in range(num_frames_lagosta):
     frame.blit(spritesheet_lagosta, (0, 0), (x_inicio, 0, frame_w_lagosta, altura_lagosta))
     frame = pygame.transform.scale(frame, (int(frame_w_lagosta * 0.45), int(altura_lagosta * 0.45)))
     frames_lagosta.append(frame)
+
+# spritesheet boss
+spritesheet_boss = pygame.image.load('Characters/boss_final.png').convert_alpha()
+largura_boss = spritesheet_boss.get_width()
+altura_boss = spritesheet_boss.get_height()
+num_frames_boss = 5
+frame_w_boss = largura_boss // num_frames_boss
+espaco = 10 
+frames_boss = []
+for i in range(num_frames_boss):
+    x_inicio = i * frame_w_boss
+    frame = pygame.Surface((frame_w_boss - espaco, altura_boss),  pygame.SRCALPHA)
+    frame.blit(spritesheet_boss, (0, 0), (x_inicio, 0, frame_w_boss - espaco, altura_boss))
+    frame = pygame.transform.scale(frame, (int(frame.get_width() * 1), int(frame.get_height() * 1)))
+    frames_boss.append(frame)
 
 #background
 camadas = []
@@ -265,7 +280,7 @@ def criar_inimigo(tipo, x, y, inicio, fim):
             "frames": frames_lagosta,
             "frame_atual": 0,
             "contador": 0,
-            "hitbox": pygame.Rect(0,0,108,25),
+            "hitbox": pygame.Rect(10,0,88,25),
             "offset_y": 0,
             "vivo": True
         }
@@ -285,16 +300,36 @@ def criar_inimigo(tipo, x, y, inicio, fim):
             "offset_y": 0,
             "vivo": True
         }
-#inimigos
+# inimigos
 inimigos = [
-    criar_inimigo("caranguejo",750,377,750,890),
-    criar_inimigo("caranguejo",1140,377,1140,1500),
-    criar_inimigo("caranguejo",1650,185,1650,1790),
-    criar_inimigo("caranguejo",2850,377,2850,3050),
+
+    # ---------- PRIMEIRA VOLTA (0 - 3904) ----------
+    criar_inimigo("caranguejo", 700, 377, 700, 820),
+    criar_inimigo("caranguejo", 1150, 377, 1150, 1400),
+    criar_inimigo("caranguejo", 1650, 185, 1650, 1790),
+    criar_inimigo("caranguejo", 2850, 377, 2850, 3050),
     criar_inimigo("caranguejo", 3100, 377, 3100, 3350),
-    criar_inimigo("caranguejo", 3800, 377, 3800, 4000),
-    criar_inimigo("boss", 300, 300, 300, 200)
-    ]
+    criar_inimigo("caranguejo", 3800, 377, 3800, 3900),
+    criar_inimigo("caranguejo", 4000, 377, 4000, 4100),
+    criar_inimigo("caranguejo", 4200, 377, 4200, 4300),
+    criar_inimigo("caranguejo", 4400, 377, 4400, 4500),
+    # ---------- SEGUNDA VOLTA (3904 - 7808) ----------
+    criar_inimigo("lagosta", 4654, 485, 4654, 4774),
+    criar_inimigo("lagosta", 5104, 485, 5104, 5354),
+    criar_inimigo("lagosta", 5604, 295, 5604, 5744),
+    criar_inimigo("lagosta", 6804, 485, 6804, 7004),
+    criar_inimigo("lagosta", 7054, 485, 7054, 7304),
+    criar_inimigo("lagosta", 7754, 485, 7754, 8000),
+    criar_inimigo("lagosta", 8104, 485, 8104, 8310),
+
+    # ---------- TERCEIRA VOLTA (7808 - 11712) ----------
+  criar_inimigo("caranguejo", 8658, 377, 8658, 8778),
+  criar_inimigo("lagosta", 9108, 485, 9108, 9368),
+  criar_inimigo("caranguejo", 9608, 185, 9608, 9748),
+  criar_inimigo("lagosta", 10808, 485, 10808, 11008),
+  criar_inimigo("caranguejo", 11008, 377, 11008, 11258),
+
+]
 
 #movimentação do personagem
 personagem_x = 200
@@ -439,26 +474,24 @@ while True:
         else:
             velocidadechar1_y = 0
 
-        # MOVIMENTAÇÃO E ANIMAÇÃO DOS INIMIGOS (LUIGI)
-        for inimigo in inimigos:
-            inimigo["x"] += inimigo["vel"] * inimigo["dir"]
+    for inimigo in inimigos:
+        inimigo["x"] += inimigo["vel"] * inimigo["dir"]
+        if "frames" in inimigo:
+            inimigo["contador"] += 1
+            if inimigo["contador"] >= 8:
+                inimigo["contador"] = 0
+                inimigo["frame_atual"] += 1
+                if inimigo["frame_atual"] >= len(inimigo["frames"]):
+                    inimigo["frame_atual"] = 0
+                inimigo["imagem"] = inimigo["frames"][inimigo["frame_atual"]]
+        
+        inimigo["hitbox"].x = inimigo["x"] + 2
+        inimigo["hitbox"].y = inimigo["y"] + inimigo["offset_y"]
 
-            if "frames" in inimigo:
-                inimigo["contador"] += 1
-                if inimigo["contador"] >= 8:
-                    inimigo["contador"] = 0
-                    inimigo["frame_atual"] += 1
-                    if inimigo["frame_atual"] >= len(inimigo["frames"]):
-                        inimigo["frame_atual"] = 0
-                    inimigo["imagem"] = inimigo["frames"][inimigo["frame_atual"]]
-
-            inimigo["hitbox"].x = inimigo["x"] + inimigo["dx_hitbox"]
-            inimigo["hitbox"].y = inimigo["y"] + inimigo["dy_hitbox"]
-
-            if inimigo["x"] >= inimigo["fim"]:
-                inimigo["dir"] = -1
-            if inimigo["x"] <= inimigo["inicio"]:
-                inimigo["dir"] = 1
+        if inimigo["x"] >= inimigo["fim"]:
+            inimigo["dir"] = -1
+        if inimigo["x"] <= inimigo["inicio"]:
+            inimigo["dir"] = 1
 
     personagem_x = max(0, personagem_x)
     personagem_x = min(personagem_x, largura_mapa_px * 3 - personagem_parado.get_width())
