@@ -19,14 +19,19 @@ som_moeda = pygame.mixer.Sound("sounds/COLETAR MOEDA/Picked Coin Echo.mp3")
 som_aterrissagem = pygame.mixer.Sound("sounds/ATERRISSAGEM (LANDING AFTER JUMP)/ATERRISSAGEM.mpeg")
 som_siri = pygame.mixer.Sound("sounds\COLETAR MOEDA\siri.mp3")
 som_lagosta = pygame.mixer.Sound("sounds\COLETAR MOEDA\lagosta.mp3")
+som_aura_tridente = pygame.mixer.Sound("sounds\TRIDENTE (AURA)\.aura_tridente.mp3")
 
 som_passos.set_volume(0.4)
+som_siri.set_volume(0.2)
+som_aura_tridente.set_volume(0.2)
+som_moeda.set_volume(0.2)
 
 # canal 1 é só dos passos, canal 2 é só do som de matar inimigo,
 # canal 3 é só da moeda. assim nenhum som corta o outro.
 canal_passos = pygame.mixer.Channel(1)
 canal_inimigos = pygame.mixer.Channel(2)
 canal_moeda = pygame.mixer.Channel(3)
+canal_tridente = pygame.mixer.Channel(4)
 
 def tocar_som_do_inimigo(tipo):
     if tipo == "caranguejo":
@@ -602,7 +607,7 @@ while True:
     if estado_jogo == "JOGANDO" and not tem_tridente:
         if collider_personagem.colliderect(TRIDENTE_RECT):
             tem_tridente = True
-            canal_moeda.play(som_moeda)
+            canal_tridente.play(som_aura_tridente)
 
     # animacao do personagem
     deslocamento_x_pulo = 0
