@@ -62,6 +62,9 @@ atacando = False
 atk_frame_atual = 0
 atk_contador_frames = 0
 atk_intervalo_frame = 4
+ataque_acertou_boss = False
+DANO_ATAQUE_TRIDENTE = 5
+FRAMES_ATIVOS_ATAQUE = [2, 3, 4, 5]
 
 spritesheet_pular = pygame.image.load('Characters/spritesheet_pular.png').convert_alpha()
 largura_pular = spritesheet_pular.get_width()
@@ -154,9 +157,15 @@ DISTANCIA_LADO = 300
 DURACAO_PREPARO_MS = 400    
 DURACAO_INVESTIDA_MS = 700   
 INTERVALO_PARADO_MS = 2000    
+VIDA_FASE_2_BOSS = 50
+DURACAO_PREPARO_FASE_2_MS = 300
+DURACAO_INVESTIDA_FASE_2_MS = 500
+INTERVALO_PARADO_FASE_2_MS = 1200
 
-HITBOX_BOSS_LARGURA = 220
-HITBOX_BOSS_ALTURA = 220
+# Hitbox mais baixa: assim o boss acerta quem esta no chao,
+# mas nao pega o jogador quando ele esta em cima da plataforma.
+HITBOX_BOSS_LARGURA = 240
+HITBOX_BOSS_ALTURA = 120
 hitbox_boss_y = CHAO_ARENA - HITBOX_BOSS_ALTURA
 
 boss = {
@@ -177,6 +186,9 @@ boss = {
 }
 vida_boss_maxima = 100
 vida_boss = vida_boss_maxima
+DANO_INVESTIDA_BOSS = 25
+COOLDOWN_DANO_BOSS_MS = 1000
+tempo_ultimo_dano_boss = pygame.time.get_ticks()
 
 #fade
 fade_alpha = 255
@@ -187,11 +199,17 @@ while True:
     for evento in pygame.event.get():
         if evento.type == pygame.QUIT:
             pygame.quit(); sys.exit()
+        if estado_jogo == "DERROTA" and evento.type == pygame.KEYDOWN:
+            if evento.key == pygame.K_RETURN:
+                canal_passos.stop()
+                exec(open("jogo_final.py", encoding="utf-8").read())
+                sys.exit()
         if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
-            if not atacando:
+            if estado_jogo != "DERROTA" and not atacando:
                 atacando = True
                 atk_frame_atual = 0
                 atk_contador_frames = 0
+                ataque_acertou_boss = False
 
     clock.tick(60)
     dt = clock.get_time()
@@ -199,12 +217,12 @@ while True:
     teclas = pygame.key.get_pressed()
     movendo = False
 
-    if not atacando and teclas[pygame.K_d]:
+    if estado_jogo != "DERROTA" and not atacando and teclas[pygame.K_d]:
         personagem_x += 300 * dt / 1000
         virado_direita = True
         movendo = True
 
-    if not atacando and teclas[pygame.K_a]:
+    if estado_jogo != "DERROTA" and not atacando and teclas[pygame.K_a]:
         personagem_x -= 300 * dt / 1000
         virado_direita = False
         movendo = True
@@ -216,13 +234,15 @@ while True:
         coracoes -= 1
         vida_atual = vida_maxima
         if coracoes <= 0:
-            coracoes = 3
-            vida_atual = vida_maxima
-            vida_boss = vida_boss_maxima
-            boss["vivo"] = True
+            estado_jogo = "DERROTA"
+            pontuacao = 0
+            vida_atual = 0
+            canal_passos.stop()
+        else:
             personagem_x = ARENA_PERSONAGEM_X
             char1_y = ARENA_PERSONAGEM_Y
             velocidadechar1_y = 0
+            tempo_ultimo_dano_boss = pygame.time.get_ticks()
 
     #colisão horizontal
     collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
@@ -236,6 +256,14 @@ while True:
 
     if boss["vivo"]:
         agora = pygame.time.get_ticks()
+        if vida_boss <= VIDA_FASE_2_BOSS:
+            duracao_preparo_atual = DURACAO_PREPARO_FASE_2_MS
+            duracao_investida_atual = DURACAO_INVESTIDA_FASE_2_MS
+            intervalo_parado_atual = INTERVALO_PARADO_FASE_2_MS
+        else:
+            duracao_preparo_atual = DURACAO_PREPARO_MS
+            duracao_investida_atual = DURACAO_INVESTIDA_MS
+            intervalo_parado_atual = INTERVALO_PARADO_MS
 
         if boss["estado"] == "parado":
             boss["frame_atual"] = 0
@@ -246,7 +274,7 @@ while True:
                 boss["inicio_fase"] = agora
 
         elif boss["estado"] == "preparando":
-            progresso = (agora - boss["inicio_fase"]) / DURACAO_PREPARO_MS
+            progresso = (agora - boss["inicio_fase"]) / duracao_preparo_atual
             if progresso >= 1:
                 progresso = 1
                 boss["estado"] = "investindo"
@@ -257,12 +285,12 @@ while True:
             boss["deslocamento_x"] = boss["lado"] * DISTANCIA_LADO
 
         elif boss["estado"] == "investindo":
-            progresso = (agora - boss["inicio_fase"]) / DURACAO_INVESTIDA_MS
+            progresso = (agora - boss["inicio_fase"]) / duracao_investida_atual
             if progresso >= 1:
                 progresso = 1
                 boss["lado"] = boss["lado_destino"]
                 boss["estado"] = "parado"
-                boss["proxima_acao"] = agora + INTERVALO_PARADO_MS
+                boss["proxima_acao"] = agora + intervalo_parado_atual
 
             boss["deslocamento_x"] = boss["x_origem"] + (boss["x_destino"] - boss["x_origem"]) * progresso
             boss["frame_atual"] = 3
@@ -305,6 +333,56 @@ while True:
     if teclas[pygame.K_SPACE] and no_chao:
         velocidadechar1_y = forca_pulo
         som_pulo.play()
+
+    collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
+
+    # ATAQUE DO TRIDENTE: durante os frames ativos, cria uma hitbox na frente do jogador.
+    if boss["vivo"] and atacando and not ataque_acertou_boss and atk_frame_atual in FRAMES_ATIVOS_ATAQUE:
+        alcance_tridente = 150
+        altura_tridente = 80
+        if virado_direita:
+            hitbox_ataque = pygame.Rect(collider_personagem.right - 10, collider_personagem.centery - altura_tridente // 2, alcance_tridente, altura_tridente)
+        else:
+            hitbox_ataque = pygame.Rect(collider_personagem.left - alcance_tridente + 10, collider_personagem.centery - altura_tridente // 2, alcance_tridente, altura_tridente)
+
+        if hitbox_ataque.colliderect(boss["hitbox"]):
+            vida_boss -= DANO_ATAQUE_TRIDENTE
+            ataque_acertou_boss = True
+            if vida_boss <= 0:
+                vida_boss = 0
+                boss["vivo"] = False
+                boss_morto = True
+                estado_jogo = "VITORIA"
+                canal_passos.stop()
+                pontuacao += 500
+
+    # COLISAO DO BOSS: encostar bloqueia o jogador; na investida tambem tira vida.
+    if boss["vivo"] and collider_personagem.colliderect(boss["hitbox"]):
+        x_antes_do_empurrao = personagem_x
+
+        if collider_personagem.centerx < boss["hitbox"].centerx:
+            personagem_x = boss["hitbox"].left - personagem_parado.get_width()
+        else:
+            personagem_x = boss["hitbox"].right
+
+        personagem_x = max(0, min(personagem_x, LARGURA_ARENA - personagem_parado.get_width()))
+        collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
+
+        empurrou_para_dentro_do_bloco = False
+        for bloco in collider_list:
+            if collider_personagem.colliderect(bloco):
+                empurrou_para_dentro_do_bloco = True
+
+        if empurrou_para_dentro_do_bloco:
+            personagem_x = x_antes_do_empurrao
+            collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
+
+        if boss["estado"] == "investindo":
+            agora = pygame.time.get_ticks()
+            if agora - tempo_ultimo_dano_boss > COOLDOWN_DANO_BOSS_MS:
+                vida_atual -= DANO_INVESTIDA_BOSS
+                tempo_ultimo_dano_boss = agora
+                velocidadechar1_y = -8
 
     # SOM DE PASSOS, REAPROVEITANDO O SISTEMA JÁ CRIADO NO ARQUIVO PRINCIPAL (LUIGI)
     atualizar_sistema_sonoro(movendo and no_chao)
@@ -378,6 +456,12 @@ while True:
     largura_barra_boss = 400
     pygame.draw.rect(screen, (255, 215, 0), (1280 // 2 - largura_barra_boss // 2 - 3, 17, largura_barra_boss + 6, 24), 3)
     pygame.draw.rect(screen, (148, 0, 0), (1280 // 2 - largura_barra_boss // 2, 20, int(largura_barra_boss * vida_boss / vida_boss_maxima), 18))
+
+    if not boss["vivo"]:
+        texto_vitoria = fonte_telas.render("VOCE VENCEU!", True, (0, 255, 0))
+        texto_pontos = fonte_hud.render("Pontuacao Final: " + str(pontuacao), True, (255, 215, 0))
+        screen.blit(texto_vitoria, (1280 // 2 - texto_vitoria.get_width() // 2, 720 // 2 - 50))
+        screen.blit(texto_pontos, (1280 // 2 - texto_pontos.get_width() // 2, 720 // 2 + 40))
 
     # fade de entrada
     if fade_alpha > 0:
