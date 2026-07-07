@@ -10,20 +10,27 @@ clock = pygame.time.Clock()
 
 #spritesheet (mergulhador com tridente)
 spritesheet_andar = pygame.image.load('Characters/spritesheet_andando_tridente.png').convert_alpha()
-print("DEBUG: spritesheet_andar carregado, tamanho =", spritesheet_andar.get_size())
-frame_h = spritesheet_andar.get_height()
 escala = 0.3
 
-# frames com largura irregular - corta cada um pelo próprio contorno (bounding box),
-# em vez de dividir em fatias de largura fixa
-frames_x = [(61, 388), (411, 728), (740, 1066), (1109, 1444), (1497, 1805), (1835, 2158)]
+# frames com contorno irregular - corta cada um pelo próprio bounding box (x e y),
+# em vez de dividir em fatias de largura/altura fixa. Isso evita sobra de espaço
+# transparente que fazia o personagem "flutuar" acima do chão.
+frames_bbox = [
+    (61, 388, 155, 567),
+    (411, 728, 156, 570),
+    (740, 1066, 156, 570),
+    (1109, 1444, 156, 566),
+    (1497, 1805, 155, 571),
+    (1835, 2158, 155, 570),
+]
 
 frames_andar = []
-for x_inicio, x_fim in frames_x:
+for x_inicio, x_fim, y_inicio, y_fim in frames_bbox:
     frame_w = x_fim - x_inicio + 1
-    frame = pygame.Surface((frame_w, frame_h), pygame.SRCALPHA)
-    frame.blit(spritesheet_andar, (0, 0), (x_inicio, 0, frame_w, frame_h))
-    frame = pygame.transform.scale(frame, (int(frame_w * escala), int(frame_h * escala)))
+    frame_h_frame = y_fim - y_inicio + 1
+    frame = pygame.Surface((frame_w, frame_h_frame), pygame.SRCALPHA)
+    frame.blit(spritesheet_andar, (0, 0), (x_inicio, y_inicio, frame_w, frame_h_frame))
+    frame = pygame.transform.scale(frame, (int(frame_w * escala), int(frame_h_frame * escala)))
     frames_andar.append(frame)
 
 personagem_parado = frames_andar[0]
@@ -100,7 +107,7 @@ collider_list.append(pygame.Rect(LARGURA_ARENA, 0, 10, 720))
 
 #personagem
 personagem_x = 100.0
-char1_y = 400.0
+char1_y = (9 * TILE + 32) - personagem_parado.get_height()
 velocidadechar1_y = 0
 gravidade = 0.8
 forca_pulo = -15
@@ -109,7 +116,7 @@ virado_direita = True
 
 # POSIÇÃO INICIAL DO JOGADOR NA ARENA, PRA RESPAWNAR AQUI SE MORRER (LUIGI)
 ARENA_PERSONAGEM_X = 100.0
-ARENA_PERSONAGEM_Y = 400.0
+ARENA_PERSONAGEM_Y = (9 * TILE + 32) - personagem_parado.get_height()
 
 # BOSS: animado (spritesheet), 4x maior e centralizado na arena, com hitbox
 # de colisão pra tomar/dar dano depois (LUIGI)
