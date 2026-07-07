@@ -468,12 +468,12 @@ while True:
 
         if not fadendo:
             if teclas[pygame.K_d]:
-                personagem_x += 300 * dt / 1000
+                personagem_x += 2000 * dt / 1000
                 virado_direita = True
                 movendo = True
 
             if teclas[pygame.K_a]:
-                personagem_x -= 300 * dt / 1000
+                personagem_x -= 2000 * dt / 1000
                 virado_direita = False
                 movendo = True
         else:

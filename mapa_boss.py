@@ -8,21 +8,22 @@ pygame.mixer.music.play(-1)
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 
-#spritesheet
-spritesheet_andar = pygame.image.load('Characters/spritesheet_andar.png').convert_alpha()
-largura_total = spritesheet_andar.get_width()
+#spritesheet (mergulhador com tridente)
+spritesheet_andar = pygame.image.load('Characters/spritesheet_andando_tridente.png').convert_alpha()
+print("DEBUG: spritesheet_andar carregado, tamanho =", spritesheet_andar.get_size())
 frame_h = spritesheet_andar.get_height()
-escala = 0.64
+escala = 0.3
 
-num_frames = 7
-frame_w_fixo = largura_total // num_frames
+# frames com largura irregular - corta cada um pelo próprio contorno (bounding box),
+# em vez de dividir em fatias de largura fixa
+frames_x = [(61, 388), (411, 728), (740, 1066), (1109, 1444), (1497, 1805), (1835, 2158)]
 
 frames_andar = []
-for i in range(num_frames):
-    x_inicio = i * frame_w_fixo
-    frame = pygame.Surface((frame_w_fixo, frame_h), pygame.SRCALPHA)
-    frame.blit(spritesheet_andar, (0, 0), (x_inicio, 0, frame_w_fixo, frame_h))
-    frame = pygame.transform.scale(frame, (int(frame_w_fixo * escala), int(frame_h * escala)))
+for x_inicio, x_fim in frames_x:
+    frame_w = x_fim - x_inicio + 1
+    frame = pygame.Surface((frame_w, frame_h), pygame.SRCALPHA)
+    frame.blit(spritesheet_andar, (0, 0), (x_inicio, 0, frame_w, frame_h))
+    frame = pygame.transform.scale(frame, (int(frame_w * escala), int(frame_h * escala)))
     frames_andar.append(frame)
 
 personagem_parado = frames_andar[0]
