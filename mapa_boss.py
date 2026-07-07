@@ -9,8 +9,7 @@ screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 
 #spritesheet (mergulhador com tridente)
-spritesheet_andar = pygame.image.load('Characters/spritesheet_andando_tridente.png').convert()
-spritesheet_andar.set_colorkey((0, 0, 0))
+spritesheet_andar = pygame.image.load('Characters/spritesheet_andando_tridente.png').convert_alpha()
 escala = 0.35
 
 # frame 0 = parado (idle), frames 1 a 5 = ciclo de andar
