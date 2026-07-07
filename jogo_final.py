@@ -186,17 +186,22 @@ for i in range(num_frames_lagosta):
 
 # spritesheet boss
 spritesheet_boss = pygame.image.load('Characters/boss_final.png').convert_alpha()
-largura_boss = spritesheet_boss.get_width()
-altura_boss = spritesheet_boss.get_height()
-num_frames_boss = 5
-frame_w_boss = largura_boss // num_frames_boss
-espaco = 10 
+# cortado pelo contorno real de cada frame (bounding box), não fatia fixa -
+# o desenho vai de enrolado a totalmente esticado, então largura/altura
+# variam bastante entre os frames
+frames_boss_bbox = [
+    (156, 353, 263, 447),
+    (576, 794, 273, 444),
+    (945, 1181, 290, 433),
+    (1333, 1674, 315, 433),
+    (1737, 2071, 338, 423),
+]
 frames_boss = []
-for i in range(num_frames_boss):
-    x_inicio = i * frame_w_boss
-    frame = pygame.Surface((frame_w_boss - espaco, altura_boss),  pygame.SRCALPHA)
-    frame.blit(spritesheet_boss, (0, 0), (x_inicio, 0, frame_w_boss - espaco, altura_boss))
-    frame = pygame.transform.scale(frame, (int(frame.get_width() * 1), int(frame.get_height() * 1)))
+for x_inicio, x_fim, y_inicio, y_fim in frames_boss_bbox:
+    frame_w = x_fim - x_inicio + 1
+    frame_h_frame = y_fim - y_inicio + 1
+    frame = pygame.Surface((frame_w, frame_h_frame), pygame.SRCALPHA)
+    frame.blit(spritesheet_boss, (0, 0), (x_inicio, y_inicio, frame_w, frame_h_frame))
     frames_boss.append(frame)
 
 #background

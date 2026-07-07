@@ -12,8 +12,6 @@ clock = pygame.time.Clock()
 spritesheet_andar = pygame.image.load('Characters/spritesheet_andando_tridente.png').convert_alpha()
 escala = 0.35
 
-# frame 0 = parado (idle), frames 1 a 5 = ciclo de andar
-# cortados pelo bounding box real de cada um (contorno, não fatia fixa)
 frame_parado_bbox = (68, 364, 162, 557)
 frames_andar_bbox = [
     (434, 737, 162, 556),
@@ -33,8 +31,6 @@ def cortar_frame(x_inicio, x_fim, y_inicio, y_fim):
 personagem_parado = cortar_frame(*frame_parado_bbox)
 frames_andar = [cortar_frame(*bbox) for bbox in frames_andar_bbox]
 
-# ATAQUE COM O TRIDENTE: botão esquerdo do mouse dispara a animação uma vez,
-# e no ápice do golpe (tridente esticado) checa se acertou o boss
 escala_atacar = 0.6
 spritesheet_atacar = pygame.image.load('Characters/spritesheet_batendo_tridente.png').convert_alpha()
 frames_atacar_bbox = [
@@ -47,8 +43,6 @@ frames_atacar_bbox = [
 ]
 
 frames_atacar = []
-# pontinhos residuais de frames vizinhos (fragmentos de 1-9px) que sobraram
-# no corte por contorno - limpa antes de escalar
 limpeza_por_frame = {
     1: [(75, 73, 1, 1)],
     2: [(286, 17, 5, 7)],
@@ -151,39 +145,36 @@ virado_direita = True
 ARENA_PERSONAGEM_X = 100.0
 ARENA_PERSONAGEM_Y = (9 * TILE + 32) - personagem_parado.get_height()
 
-# BOSS: animado (spritesheet), 4x maior e centralizado na arena, com hitbox
-# de colisão pra tomar/dar dano depois (LUIGI)
 CHAO_ARENA = 9 * TILE + 32
-boss_frames = [pygame.transform.scale(f, (f.get_width() * 2, f.get_height() * 2)) for f in frames_boss]
-boss_largura = boss_frames[0].get_width()
-boss_altura = boss_frames[0].get_height()
-boss_x = LARGURA_ARENA // 2 - boss_largura // 2
-boss_y = CHAO_ARENA - boss_altura
-boss_contador_frames = 0
-boss_intervalo_frame = 12
+boss_frames = [pygame.transform.scale(f, (int(f.get_width() * 0.9), int(f.get_height() * 0.9))) for f in frames_boss]
 
-# hitbox fixa, independente do tamanho do sprite (que pode ter bastante
-# espaço vazio sobrando na imagem original), grudada no chão da arena
+CENTRO_BOSS_X = LARGURA_ARENA // 2
+DISTANCIA_LADO = 300         
+DURACAO_PREPARO_MS = 400     
+DURACAO_INVESTIDA_MS = 700  
+INTERVALO_PARADO_MS = 2000    
+
+
 HITBOX_BOSS_LARGURA = 220
 HITBOX_BOSS_ALTURA = 220
-hitbox_boss_x = LARGURA_ARENA // 2 - HITBOX_BOSS_LARGURA // 2
 hitbox_boss_y = CHAO_ARENA - HITBOX_BOSS_ALTURA
 
 boss = {
-    "x": boss_x,
-    "y": boss_y,
-    "frames": boss_frames,
+    "estado": "parado",       # "parado" | "preparando" | "investindo"
+    "lado": -1,                # lado onde está descansando agora (-1 esquerda, 1 direita)
+    "lado_destino": 1,
+    "x_origem": CENTRO_BOSS_X - DISTANCIA_LADO,
+    "x_destino": CENTRO_BOSS_X + DISTANCIA_LADO,
+    "inicio_fase": 0,
+    "proxima_acao": pygame.time.get_ticks() + INTERVALO_PARADO_MS,
     "frame_atual": 0,
+    "deslocamento_x": -DISTANCIA_LADO,
     "imagem": boss_frames[0],
-    "hitbox": pygame.Rect(hitbox_boss_x, hitbox_boss_y, HITBOX_BOSS_LARGURA, HITBOX_BOSS_ALTURA),
+    "hitbox": pygame.Rect(CENTRO_BOSS_X - DISTANCIA_LADO - HITBOX_BOSS_LARGURA // 2, hitbox_boss_y, HITBOX_BOSS_LARGURA, HITBOX_BOSS_ALTURA),
     "vivo": True
 }
 vida_boss_maxima = 100
 vida_boss = vida_boss_maxima
-
-print("DEBUG: boss_largura =", boss_largura, "boss_altura =", boss_altura)
-print("DEBUG: boss_x =", boss_x, "boss_y =", boss_y)
-print("DEBUG: LARGURA_ARENA =", LARGURA_ARENA)
 
 #fade
 fade_alpha = 255
@@ -242,20 +233,50 @@ while True:
                 personagem_x = bloco.right
             collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
 
-    # ANIMAÇÃO DO BOSS (LUIGI)
+    # COMPORTAMENTO DO BOSS: enrola parado (preparo), depois atravessa
+    # segurando a pose esticada até o outro lado (LUIGI)
     if boss["vivo"]:
-        boss_contador_frames += 1
-        if boss_contador_frames >= boss_intervalo_frame:
-            boss_contador_frames = 0
-            boss["frame_atual"] = (boss["frame_atual"] + 1) % len(boss["frames"])
-            boss["imagem"] = boss["frames"][boss["frame_atual"]]
+        agora = pygame.time.get_ticks()
 
-    # COLISÃO DO JOGADOR COM O BOSS: por enquanto só tira vida ao encostar (LUIGI)
-    if boss["vivo"] and collider_personagem.colliderect(boss["hitbox"]):
-        tempo_atual = pygame.time.get_ticks()
-        if tempo_atual - tempo_ultimo_dano > 1000:
-            vida_atual -= 25
-            tempo_ultimo_dano = tempo_atual
+        if boss["estado"] == "parado":
+            boss["frame_atual"] = 0
+            boss["deslocamento_x"] = boss["lado"] * DISTANCIA_LADO
+            if agora >= boss["proxima_acao"]:
+                boss["estado"] = "preparando"
+                boss["lado_destino"] = boss["lado"] * -1
+                boss["inicio_fase"] = agora
+
+        elif boss["estado"] == "preparando":
+            progresso = (agora - boss["inicio_fase"]) / DURACAO_PREPARO_MS
+            if progresso >= 1:
+                progresso = 1
+                boss["estado"] = "investindo"
+                boss["x_origem"] = boss["lado"] * DISTANCIA_LADO
+                boss["x_destino"] = boss["lado_destino"] * DISTANCIA_LADO
+                boss["inicio_fase"] = agora
+            boss["frame_atual"] = min(3, int(progresso * 4))
+            boss["deslocamento_x"] = boss["lado"] * DISTANCIA_LADO
+
+        elif boss["estado"] == "investindo":
+            progresso = (agora - boss["inicio_fase"]) / DURACAO_INVESTIDA_MS
+            if progresso >= 1:
+                progresso = 1
+                boss["lado"] = boss["lado_destino"]
+                boss["estado"] = "parado"
+                boss["proxima_acao"] = agora + INTERVALO_PARADO_MS
+
+            boss["deslocamento_x"] = boss["x_origem"] + (boss["x_destino"] - boss["x_origem"]) * progresso
+            boss["frame_atual"] = 4 if progresso >= 0.5 else 3
+
+        boss["imagem"] = boss_frames[boss["frame_atual"]]
+        if boss["estado"] in ("preparando", "investindo"):
+            direcao_atual = boss["lado_destino"]
+        else:
+            direcao_atual = boss["lado"] * -1  # parado: encara pra dentro da arena
+        if direcao_atual > 0:
+            boss["imagem"] = pygame.transform.flip(boss["imagem"], True, False)
+
+        boss["hitbox"].centerx = CENTRO_BOSS_X + int(boss["deslocamento_x"])
 
     velocidadechar1_y += gravidade
     char1_y += velocidadechar1_y
@@ -301,8 +322,6 @@ while True:
     elif not no_chao:
         imagem_atual = frames_pular[3]
         deslocamento_x_pulo = -20
-        # pulo ainda usa ancoragem pelo topo (esse spritesheet não foi cortado
-        # pelo contorno igual os outros, então usa o esquema antigo)
         pos_y_desenho = int(char1_y) - 60
     elif movendo and no_chao:
         contador_frames += 1
@@ -339,7 +358,10 @@ while True:
     screen.blit(imagem_atual, (int(personagem_x) + deslocamento_x_pulo, pos_y_desenho))
 
     if boss["vivo"]:
-        screen.blit(boss["imagem"], (boss["x"], boss["y"]))
+        boss_img = boss["imagem"]
+        boss_pos_x = CENTRO_BOSS_X - boss_img.get_width() // 2 + int(boss["deslocamento_x"])
+        boss_pos_y = CHAO_ARENA - boss_img.get_height()
+        screen.blit(boss_img, (boss_pos_x, boss_pos_y))
 
     # CORAÇÕES E BARRA DE VIDA DO JOGADOR, IGUAL AO MAPA PRINCIPAL (LUIGI)
     for i in range(coracoes):
