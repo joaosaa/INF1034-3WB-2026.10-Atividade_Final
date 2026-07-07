@@ -149,19 +149,18 @@ CHAO_ARENA = 9 * TILE + 32
 boss_frames = [pygame.transform.scale(f, (int(f.get_width() * 0.9), int(f.get_height() * 0.9))) for f in frames_boss]
 
 CENTRO_BOSS_X = LARGURA_ARENA // 2
-DISTANCIA_LADO = 300         
-DURACAO_PREPARO_MS = 400     
-DURACAO_INVESTIDA_MS = 700  
+DISTANCIA_LADO = 300          
+DURACAO_PREPARO_MS = 400    
+DURACAO_INVESTIDA_MS = 700   
 INTERVALO_PARADO_MS = 2000    
-
 
 HITBOX_BOSS_LARGURA = 220
 HITBOX_BOSS_ALTURA = 220
 hitbox_boss_y = CHAO_ARENA - HITBOX_BOSS_ALTURA
 
 boss = {
-    "estado": "parado",       # "parado" | "preparando" | "investindo"
-    "lado": -1,                # lado onde está descansando agora (-1 esquerda, 1 direita)
+    "estado": "parado",       
+    "lado": -1,               
     "lado_destino": 1,
     "x_origem": CENTRO_BOSS_X - DISTANCIA_LADO,
     "x_destino": CENTRO_BOSS_X + DISTANCIA_LADO,
@@ -210,7 +209,6 @@ while True:
     personagem_x = max(0, personagem_x)
     personagem_x = min(personagem_x, LARGURA_ARENA - personagem_parado.get_width())
 
-    # MORREU NA LUTA: reinicia só a batalha, sem voltar pro mapa inteiro (LUIGI)
     if vida_atual <= 0:
         coracoes -= 1
         vida_atual = vida_maxima
@@ -233,8 +231,6 @@ while True:
                 personagem_x = bloco.right
             collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
 
-    # COMPORTAMENTO DO BOSS: enrola parado (preparo), depois atravessa
-    # segurando a pose esticada até o outro lado (LUIGI)
     if boss["vivo"]:
         agora = pygame.time.get_ticks()
 
@@ -266,7 +262,7 @@ while True:
                 boss["proxima_acao"] = agora + INTERVALO_PARADO_MS
 
             boss["deslocamento_x"] = boss["x_origem"] + (boss["x_destino"] - boss["x_origem"]) * progresso
-            boss["frame_atual"] = 4 if progresso >= 0.5 else 3
+            boss["frame_atual"] = 3
 
         boss["imagem"] = boss_frames[boss["frame_atual"]]
         if boss["estado"] in ("preparando", "investindo"):

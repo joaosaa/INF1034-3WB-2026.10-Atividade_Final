@@ -26,8 +26,6 @@ som_siri.set_volume(0.2)
 som_aura_tridente.set_volume(0.2)
 som_moeda.set_volume(0.2)
 
-# canal 1 é só dos passos, canal 2 é só do som de matar inimigo,
-# canal 3 é só da moeda. assim nenhum som corta o outro.
 canal_passos = pygame.mixer.Channel(1)
 canal_inimigos = pygame.mixer.Channel(2)
 canal_moeda = pygame.mixer.Channel(3)
