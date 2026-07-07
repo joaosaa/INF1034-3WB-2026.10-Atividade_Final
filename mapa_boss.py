@@ -1,9 +1,5 @@
 import pygame, sys
 
-# NÃO chamar pygame.init() de novo aqui: o processo já está com tudo
-# inicializado desde o arquivo principal (mesmo exec). Reinicializar
-# reabre o dispositivo de áudio e quebra os sons já carregados (LUIGI)
-
 # TRILHA SONORA DO BOSS (LUIGI)
 pygame.mixer.music.load("sounds\TRILHA SONORA\FINAL BOSS\Final Boss.mp3")
 pygame.mixer.music.set_volume(1.5)
@@ -87,7 +83,7 @@ mapa = [
     "DDDDDDDDDDDDDDDDDDDD",
 ]
 
-LARGURA_ARENA = len(mapa[0]) * TILE  # 1280px
+LARGURA_ARENA = len(mapa[0]) * TILE  
 
 collider_list = []
 for i, linha in enumerate(mapa):
@@ -98,8 +94,8 @@ for i, linha in enumerate(mapa):
             collider_list.append(pygame.Rect(j * TILE, i * TILE, TILE, TILE))
 
 # paredes laterais invisíveis
-collider_list.append(pygame.Rect(-10, 0, 10, 720))           # parede esquerda
-collider_list.append(pygame.Rect(LARGURA_ARENA, 0, 10, 720)) # parede direita
+collider_list.append(pygame.Rect(-10, 0, 10, 720))           
+collider_list.append(pygame.Rect(LARGURA_ARENA, 0, 10, 720)) 
 
 #personagem
 personagem_x = 100.0
