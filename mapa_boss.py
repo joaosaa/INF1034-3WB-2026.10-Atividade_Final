@@ -34,6 +34,41 @@ def cortar_frame(x_inicio, x_fim, y_inicio, y_fim):
 personagem_parado = cortar_frame(*frame_parado_bbox)
 frames_andar = [cortar_frame(*bbox) for bbox in frames_andar_bbox]
 
+# ATAQUE COM O TRIDENTE: botão esquerdo do mouse dispara a animação uma vez,
+# e no ápice do golpe (tridente esticado) checa se acertou o boss
+escala_atacar = 0.6
+spritesheet_atacar = pygame.image.load('Characters/spritesheet_batendo_tridente.png').convert_alpha()
+frames_atacar_bbox = [
+    (38, 182, 257, 498),
+    (265, 441, 242, 497),
+    (537, 826, 283, 497),
+    (827, 1072, 283, 497),
+    (1166, 1425, 301, 497),
+    (1867, 2165, 314, 499),
+]
+
+frames_atacar = []
+# pontinhos residuais de frames vizinhos (fragmentos de 1-9px) que sobraram
+# no corte por contorno - limpa antes de escalar
+limpeza_por_frame = {
+    1: [(75, 73, 1, 1)],
+    2: [(286, 17, 5, 7)],
+}
+for indice_frame, (x_inicio, x_fim, y_inicio, y_fim) in enumerate(frames_atacar_bbox):
+    frame_w = x_fim - x_inicio + 1
+    frame_h_frame = y_fim - y_inicio + 1
+    frame = pygame.Surface((frame_w, frame_h_frame), pygame.SRCALPHA)
+    frame.blit(spritesheet_atacar, (0, 0), (x_inicio, y_inicio, frame_w, frame_h_frame))
+    for (lx, ly, lw, lh) in limpeza_por_frame.get(indice_frame, []):
+        frame.fill((0, 0, 0, 0), pygame.Rect(lx, ly, lw, lh))
+    frame = pygame.transform.scale(frame, (int(frame_w * escala_atacar), int(frame_h_frame * escala_atacar)))
+    frames_atacar.append(frame)
+
+atacando = False
+atk_frame_atual = 0
+atk_contador_frames = 0
+atk_intervalo_frame = 4
+
 spritesheet_pular = pygame.image.load('Characters/spritesheet_pular.png').convert_alpha()
 largura_pular = spritesheet_pular.get_width()
 frame_h_pular = spritesheet_pular.get_height()
@@ -153,6 +188,11 @@ while True:
     for evento in pygame.event.get():
         if evento.type == pygame.QUIT:
             pygame.quit(); sys.exit()
+        if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
+            if not atacando:
+                atacando = True
+                atk_frame_atual = 0
+                atk_contador_frames = 0
 
     clock.tick(60)
     dt = clock.get_time()
@@ -160,12 +200,12 @@ while True:
     teclas = pygame.key.get_pressed()
     movendo = False
 
-    if teclas[pygame.K_d]:
+    if not atacando and teclas[pygame.K_d]:
         personagem_x += 300 * dt / 1000
         virado_direita = True
         movendo = True
 
-    if teclas[pygame.K_a]:
+    if not atacando and teclas[pygame.K_a]:
         personagem_x -= 300 * dt / 1000
         virado_direita = False
         movendo = True
@@ -241,20 +281,35 @@ while True:
     # animação do personagem
     deslocamento_x_pulo = 0
     deslocamento_y_pulo = 0
-    if not no_chao:
+    pes_y = int(char1_y) + personagem_parado.get_height()
+    if atacando:
+        atk_contador_frames += 1
+        if atk_contador_frames >= atk_intervalo_frame:
+            atk_contador_frames = 0
+            atk_frame_atual += 1
+            if atk_frame_atual >= len(frames_atacar):
+                atacando = False
+                atk_frame_atual = 0
+        imagem_atual = frames_atacar[atk_frame_atual] if atacando else personagem_parado
+        pos_y_desenho = pes_y - imagem_atual.get_height()
+    elif not no_chao:
         imagem_atual = frames_pular[3]
-        deslocamento_y_pulo = -60
         deslocamento_x_pulo = -20
+        # pulo ainda usa ancoragem pelo topo (esse spritesheet não foi cortado
+        # pelo contorno igual os outros, então usa o esquema antigo)
+        pos_y_desenho = int(char1_y) - 60
     elif movendo and no_chao:
         contador_frames += 1
         if contador_frames >= intervalo_frame:
             contador_frames = 0
             frame_atual = (frame_atual + 1) % len(frames_andar)
         imagem_atual = frames_andar[frame_atual]
+        pos_y_desenho = pes_y - imagem_atual.get_height()
     else:
         frame_atual = 0
         contador_frames = 0
         imagem_atual = personagem_parado
+        pos_y_desenho = pes_y - imagem_atual.get_height()
 
     if not virado_direita:
         imagem_atual = pygame.transform.flip(imagem_atual, True, False)
@@ -275,7 +330,7 @@ while True:
             elif cel == 'P':
                 screen.blit(t_topo, (x, y))
 
-    screen.blit(imagem_atual, (int(personagem_x) + deslocamento_x_pulo, int(char1_y) + deslocamento_y_pulo))
+    screen.blit(imagem_atual, (int(personagem_x) + deslocamento_x_pulo, pos_y_desenho))
 
     if boss["vivo"]:
         screen.blit(boss["imagem"], (boss["x"], boss["y"]))
