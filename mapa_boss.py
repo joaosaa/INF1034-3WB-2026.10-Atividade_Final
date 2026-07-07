@@ -1,4 +1,5 @@
 import pygame, sys
+import math
 
 # TRILHA SONORA DO BOSS (LUIGI)
 pygame.mixer.music.load("sounds\TRILHA SONORA\FINAL BOSS\Final Boss.mp3")
@@ -170,7 +171,9 @@ boss = {
     "deslocamento_x": -DISTANCIA_LADO,
     "imagem": boss_frames[0],
     "hitbox": pygame.Rect(CENTRO_BOSS_X - DISTANCIA_LADO - HITBOX_BOSS_LARGURA // 2, hitbox_boss_y, HITBOX_BOSS_LARGURA, HITBOX_BOSS_ALTURA),
-    "vivo": True
+    "vivo": True,
+    "tempo_idle": 0,
+    "offset_y": 0
 }
 vida_boss_maxima = 100
 vida_boss = vida_boss_maxima
@@ -273,6 +276,11 @@ while True:
             boss["imagem"] = pygame.transform.flip(boss["imagem"], True, False)
 
         boss["hitbox"].centerx = CENTRO_BOSS_X + int(boss["deslocamento_x"])
+        if boss["estado"] == "parado":
+         boss["tempo_idle"] += 0.12
+         boss["offset_y"] = math.sin(boss["tempo_idle"]) * 6
+        else:
+         boss["offset_y"] = 0
 
     velocidadechar1_y += gravidade
     char1_y += velocidadechar1_y
@@ -356,7 +364,7 @@ while True:
     if boss["vivo"]:
         boss_img = boss["imagem"]
         boss_pos_x = CENTRO_BOSS_X - boss_img.get_width() // 2 + int(boss["deslocamento_x"])
-        boss_pos_y = CHAO_ARENA - boss_img.get_height()
+        boss_pos_y = CHAO_ARENA - boss_img.get_height() + boss["offset_y"]
         screen.blit(boss_img, (boss_pos_x, boss_pos_y))
 
     # CORAÇÕES E BARRA DE VIDA DO JOGADOR, IGUAL AO MAPA PRINCIPAL (LUIGI)
