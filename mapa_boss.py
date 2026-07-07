@@ -2,7 +2,7 @@ import pygame, sys
 
 # TRILHA SONORA DO BOSS (LUIGI)
 pygame.mixer.music.load("sounds\TRILHA SONORA\FINAL BOSS\Final Boss.mp3")
-pygame.mixer.music.set_volume(1.5)
+pygame.mixer.music.set_volume(0.090)
 pygame.mixer.music.play(-1)
 
 screen = pygame.display.set_mode((1280, 720))
@@ -106,6 +106,37 @@ forca_pulo = -15
 no_chao = True
 virado_direita = True
 
+# POSIÇÃO INICIAL DO JOGADOR NA ARENA, PRA RESPAWNAR AQUI SE MORRER (LUIGI)
+ARENA_PERSONAGEM_X = 100.0
+ARENA_PERSONAGEM_Y = 400.0
+
+# BOSS: animado (spritesheet), 4x maior e centralizado na arena, com hitbox
+# de colisão pra tomar/dar dano depois (LUIGI)
+CHAO_ARENA = 9 * TILE + 32
+boss_frames = [pygame.transform.scale(f, (f.get_width() * 4, f.get_height() * 4)) for f in frames_boss]
+boss_largura = boss_frames[0].get_width()
+boss_altura = boss_frames[0].get_height()
+boss_x = LARGURA_ARENA // 2 - boss_largura // 2
+boss_y = CHAO_ARENA - boss_altura
+boss_contador_frames = 0
+boss_intervalo_frame = 12
+
+boss = {
+    "x": boss_x,
+    "y": boss_y,
+    "frames": boss_frames,
+    "frame_atual": 0,
+    "imagem": boss_frames[0],
+    "hitbox": pygame.Rect(boss_x + int(boss_largura * 0.15), boss_y + int(boss_altura * 0.1), int(boss_largura * 0.7), int(boss_altura * 0.85)),
+    "vivo": True
+}
+vida_boss_maxima = 100
+vida_boss = vida_boss_maxima
+
+print("DEBUG: boss_largura =", boss_largura, "boss_altura =", boss_altura)
+print("DEBUG: boss_x =", boss_x, "boss_y =", boss_y)
+print("DEBUG: LARGURA_ARENA =", LARGURA_ARENA)
+
 #fade
 fade_alpha = 255
 fade_surface = pygame.Surface((1280, 720))
@@ -135,6 +166,19 @@ while True:
     personagem_x = max(0, personagem_x)
     personagem_x = min(personagem_x, LARGURA_ARENA - personagem_parado.get_width())
 
+    # MORREU NA LUTA: reinicia só a batalha, sem voltar pro mapa inteiro (LUIGI)
+    if vida_atual <= 0:
+        coracoes -= 1
+        vida_atual = vida_maxima
+        if coracoes <= 0:
+            coracoes = 3
+            vida_atual = vida_maxima
+            vida_boss = vida_boss_maxima
+            boss["vivo"] = True
+            personagem_x = ARENA_PERSONAGEM_X
+            char1_y = ARENA_PERSONAGEM_Y
+            velocidadechar1_y = 0
+
     #colisão horizontal
     collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
     for bloco in collider_list:
@@ -144,6 +188,21 @@ while True:
             else:
                 personagem_x = bloco.right
             collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
+
+    # ANIMAÇÃO DO BOSS (LUIGI)
+    if boss["vivo"]:
+        boss_contador_frames += 1
+        if boss_contador_frames >= boss_intervalo_frame:
+            boss_contador_frames = 0
+            boss["frame_atual"] = (boss["frame_atual"] + 1) % len(boss["frames"])
+            boss["imagem"] = boss["frames"][boss["frame_atual"]]
+
+    # COLISÃO DO JOGADOR COM O BOSS: por enquanto só tira vida ao encostar (LUIGI)
+    if boss["vivo"] and collider_personagem.colliderect(boss["hitbox"]):
+        tempo_atual = pygame.time.get_ticks()
+        if tempo_atual - tempo_ultimo_dano > 1000:
+            vida_atual -= 25
+            tempo_ultimo_dano = tempo_atual
 
     velocidadechar1_y += gravidade
     char1_y += velocidadechar1_y
@@ -210,6 +269,21 @@ while True:
                 screen.blit(t_topo, (x, y))
 
     screen.blit(imagem_atual, (int(personagem_x) + deslocamento_x_pulo, int(char1_y) + deslocamento_y_pulo))
+
+    if boss["vivo"]:
+        screen.blit(boss["imagem"], (boss["x"], boss["y"]))
+
+    # CORAÇÕES E BARRA DE VIDA DO JOGADOR, IGUAL AO MAPA PRINCIPAL (LUIGI)
+    for i in range(coracoes):
+        screen.blit(img_bolha, (20 + (i * 35), 20))
+
+    pygame.draw.rect(screen, (255, 215, 0), (18, 68, 204, 24), 3)
+    pygame.draw.rect(screen, (0, 105, 148), (20, 70, vida_atual * 2, 20))
+
+    # BARRA DE VIDA DO BOSS (LUIGI)
+    largura_barra_boss = 400
+    pygame.draw.rect(screen, (255, 215, 0), (1280 // 2 - largura_barra_boss // 2 - 3, 17, largura_barra_boss + 6, 24), 3)
+    pygame.draw.rect(screen, (148, 0, 0), (1280 // 2 - largura_barra_boss // 2, 20, int(largura_barra_boss * vida_boss / vida_boss_maxima), 18))
 
     # fade de entrada
     if fade_alpha > 0:
