@@ -154,7 +154,7 @@ ARENA_PERSONAGEM_Y = (9 * TILE + 32) - personagem_parado.get_height()
 # BOSS: animado (spritesheet), 4x maior e centralizado na arena, com hitbox
 # de colisão pra tomar/dar dano depois (LUIGI)
 CHAO_ARENA = 9 * TILE + 32
-boss_frames = [pygame.transform.scale(f, (f.get_width() * 4, f.get_height() * 4)) for f in frames_boss]
+boss_frames = [pygame.transform.scale(f, (f.get_width() * 2, f.get_height() * 2)) for f in frames_boss]
 boss_largura = boss_frames[0].get_width()
 boss_altura = boss_frames[0].get_height()
 boss_x = LARGURA_ARENA // 2 - boss_largura // 2
@@ -162,13 +162,20 @@ boss_y = CHAO_ARENA - boss_altura
 boss_contador_frames = 0
 boss_intervalo_frame = 12
 
+# hitbox fixa, independente do tamanho do sprite (que pode ter bastante
+# espaço vazio sobrando na imagem original), grudada no chão da arena
+HITBOX_BOSS_LARGURA = 220
+HITBOX_BOSS_ALTURA = 220
+hitbox_boss_x = LARGURA_ARENA // 2 - HITBOX_BOSS_LARGURA // 2
+hitbox_boss_y = CHAO_ARENA - HITBOX_BOSS_ALTURA
+
 boss = {
     "x": boss_x,
     "y": boss_y,
     "frames": boss_frames,
     "frame_atual": 0,
     "imagem": boss_frames[0],
-    "hitbox": pygame.Rect(boss_x + int(boss_largura * 0.15), boss_y + int(boss_altura * 0.1), int(boss_largura * 0.7), int(boss_altura * 0.85)),
+    "hitbox": pygame.Rect(hitbox_boss_x, hitbox_boss_y, HITBOX_BOSS_LARGURA, HITBOX_BOSS_ALTURA),
     "vivo": True
 }
 vida_boss_maxima = 100
