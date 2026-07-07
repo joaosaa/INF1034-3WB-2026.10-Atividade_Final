@@ -9,31 +9,30 @@ screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 
 #spritesheet (mergulhador com tridente)
-spritesheet_andar = pygame.image.load('Characters/spritesheet_andando_tridente.png').convert_alpha()
-escala = 0.3
+spritesheet_andar = pygame.image.load('Characters/spritesheet_andando_tridente.png').convert()
+spritesheet_andar.set_colorkey((0, 0, 0))
+escala = 0.35
 
-# frames com contorno irregular - corta cada um pelo próprio bounding box (x e y),
-# em vez de dividir em fatias de largura/altura fixa. Isso evita sobra de espaço
-# transparente que fazia o personagem "flutuar" acima do chão.
-frames_bbox = [
-    (61, 388, 155, 567),
-    (411, 728, 156, 570),
-    (740, 1066, 156, 570),
-    (1109, 1444, 156, 566),
-    (1497, 1805, 155, 571),
-    (1835, 2158, 155, 570),
+# frame 0 = parado (idle), frames 1 a 5 = ciclo de andar
+# cortados pelo bounding box real de cada um (contorno, não fatia fixa)
+frame_parado_bbox = (68, 364, 162, 557)
+frames_andar_bbox = [
+    (434, 737, 162, 556),
+    (777, 1099, 163, 557),
+    (1151, 1470, 163, 554),
+    (1535, 1833, 165, 557),
+    (1858, 2166, 164, 557),
 ]
 
-frames_andar = []
-for x_inicio, x_fim, y_inicio, y_fim in frames_bbox:
+def cortar_frame(x_inicio, x_fim, y_inicio, y_fim):
     frame_w = x_fim - x_inicio + 1
     frame_h_frame = y_fim - y_inicio + 1
     frame = pygame.Surface((frame_w, frame_h_frame), pygame.SRCALPHA)
     frame.blit(spritesheet_andar, (0, 0), (x_inicio, y_inicio, frame_w, frame_h_frame))
-    frame = pygame.transform.scale(frame, (int(frame_w * escala), int(frame_h_frame * escala)))
-    frames_andar.append(frame)
+    return pygame.transform.scale(frame, (int(frame_w * escala), int(frame_h_frame * escala)))
 
-personagem_parado = frames_andar[0]
+personagem_parado = cortar_frame(*frame_parado_bbox)
+frames_andar = [cortar_frame(*bbox) for bbox in frames_andar_bbox]
 
 spritesheet_pular = pygame.image.load('Characters/spritesheet_pular.png').convert_alpha()
 largura_pular = spritesheet_pular.get_width()

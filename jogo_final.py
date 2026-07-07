@@ -362,6 +362,11 @@ while True:
         # EVENTOS DO MENU, NOME DO JOGADOR E RANKING (LUIGI)
         if evento.type == pygame.KEYDOWN:
 
+            # ATALHO DE TESTE: pula quase pro fim do mapa (não mexe na velocidade normal)
+            if estado_jogo == "JOGANDO" and evento.key == pygame.K_F1:
+                personagem_x = largura_mapa_px * 3 - personagem_parado.get_width() - 200
+                tem_tridente = True
+
             if estado_jogo == "MENU":
                 if evento.key == pygame.K_UP:
                     menu_selecionado = (menu_selecionado - 1) % len(opcoes_menu)
