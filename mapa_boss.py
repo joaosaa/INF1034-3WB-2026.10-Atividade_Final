@@ -200,8 +200,6 @@ tempo_ultimo_dano_boss = pygame.time.get_ticks()
 
 #fade
 fade_alpha = 255
-fade_surface = pygame.Surface((1280, 720))
-fade_surface.fill((0, 0, 0))
 
 while True:
     for evento in pygame.event.get():
@@ -508,10 +506,8 @@ while True:
         screen.blit(texto_pontos, (1280 // 2 - texto_pontos.get_width() // 2, 720 // 2 + 50))
         screen.blit(texto_voltar, (1280 // 2 - texto_voltar.get_width() // 2, 720 // 2 + 140))
 
-    # fade de entrada
     if fade_alpha > 0:
         fade_alpha = max(0, fade_alpha - 3)
-        fade_surface.set_alpha(fade_alpha)
-        screen.blit(fade_surface, (0, 0))
+        aplicar_fade(screen, fade_alpha)
 
     pygame.display.update()

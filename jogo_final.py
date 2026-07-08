@@ -44,6 +44,11 @@ def atualizar_sistema_sonoro(jogador_movendo):
     else:
         canal_passos.stop()
 
+def aplicar_fade(tela, alpha):
+    escurecer = pygame.Surface((1280, 720))
+    escurecer.set_alpha(alpha)
+    tela.blit(escurecer, (0, 0))
+
 # SISTEMA DE HUD, PONTUAÇÃO E REGRAS (LUIGI)
 pygame.font.init()
 fonte_hud = pygame.font.Font("pixelletter.ttf", 35)
@@ -347,9 +352,7 @@ virado_direita = True
 
 # FADE / TROCA DE MAPA
 fade_alpha = 0
-fadendo = False
-fade_surface = pygame.Surface((1280, 720))
-fade_surface.fill((0, 0, 0))
+fade = False
 
 while True:
     for evento in pygame.event.get():
@@ -385,7 +388,7 @@ while True:
                     boss_morto = False
                     pontuacao_salva = False
                     fade_alpha = 0
-                    fadendo = False
+                    fade = False
                     tem_tridente = False
                     tempo_ultimo_dano = pygame.time.get_ticks()
                     for inimigo in inimigos:
@@ -467,10 +470,10 @@ while True:
             pygame.mixer.Sound("sounds/SOM DE VITORIA E DERROTA/derrota_som.mp3").play()
 
         # TROCA DE MAPA: ao chegar no limite, começa o fade em vez de ir direto pra vitória
-        elif personagem_x >= largura_mapa_px * 3 - personagem_parado.get_width() and not fadendo:
-            fadendo = True
+        elif personagem_x >= largura_mapa_px * 3 - personagem_parado.get_width() and not fade:
+            fade = True
 
-        if not fadendo:
+        if not fade:
             if teclas[pygame.K_d]:
                 personagem_x += 300 * dt / 1000
                 virado_direita = True
@@ -582,7 +585,7 @@ while True:
             collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
             encostando = pygame.Rect(collider_personagem.x, collider_personagem.y, collider_personagem.width, collider_personagem.height + 4)
 
-    if estado_jogo == "JOGANDO" and teclas[pygame.K_SPACE] and no_chao and not fadendo:
+    if estado_jogo == "JOGANDO" and teclas[pygame.K_SPACE] and no_chao and not fade:
         velocidadechar1_y = forca_pulo
         som_pulo.play()
 
@@ -772,11 +775,9 @@ while True:
         texto_voltar = fonte_hud.render("ENTER - Ver Ranking", True, (255, 255, 255))
         screen.blit(texto_voltar, (1280 // 2 - texto_voltar.get_width() // 2, 720 // 2 + 130))
 
-    # FADE
-    if fadendo:
+    if fade:
         fade_alpha = min(255, fade_alpha + 3)
-        fade_surface.set_alpha(fade_alpha)
-        screen.blit(fade_surface, (0, 0))
+        aplicar_fade(screen, fade_alpha)
         if fade_alpha >= 255:
             pygame.time.wait(500)
             canal_passos.stop()
