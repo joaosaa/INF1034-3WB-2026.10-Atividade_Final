@@ -141,7 +141,7 @@ personagem_x = 100.0
 char1_y = (9 * TILE + 32) - personagem_parado.get_height()
 velocidadechar1_y = 0
 gravidade = 0.8
-forca_pulo = -15
+forca_pulo = -18
 no_chao = True
 virado_direita = True
 
@@ -162,15 +162,13 @@ DURACAO_PREPARO_FASE_2_MS = 300
 DURACAO_INVESTIDA_FASE_2_MS = 620
 INTERVALO_PARADO_FASE_2_MS = 1200
 
-# QUEDA DE ENTRADA: o boss fica fora do mapa por um tempo e depois cai do céu
+#boss caindo
 TEMPO_ATE_QUEDA_BOSS_MS = 5000
 DURACAO_QUEDA_BOSS_MS = 600
 ALTURA_QUEDA_BOSS = 750
-PONTO_QUEDA_FIXO = 350  # deslocamento do centro da arena; positivo = mais pra direita
+PONTO_QUEDA_FIXO = 350  
 tempo_inicio_mapa = pygame.time.get_ticks()
 
-# Hitbox mais baixa: assim o boss acerta quem esta no chao,
-# mas nao pega o jogador quando ele esta em cima da plataforma.
 HITBOX_BOSS_LARGURA = 240
 HITBOX_BOSS_ALTURA = 120
 hitbox_boss_y = CHAO_ARENA - HITBOX_BOSS_ALTURA
@@ -289,7 +287,6 @@ while True:
             if agora - tempo_inicio_mapa >= TEMPO_ATE_QUEDA_BOSS_MS:
                 boss["estado"] = "caindo"
                 boss["inicio_fase"] = agora
-                # ponto fixo de queda: perto da parede direita, com uma margem
                 deslocamento_alvo = PONTO_QUEDA_FIXO
                 boss["lado"] = -1 if deslocamento_alvo < 0 else 1
                 boss["deslocamento_x"] = deslocamento_alvo
