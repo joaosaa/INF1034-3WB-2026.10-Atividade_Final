@@ -141,7 +141,7 @@ personagem_x = 100.0
 char1_y = (9 * TILE + 32) - personagem_parado.get_height()
 velocidadechar1_y = 0
 gravidade = 0.8
-forca_pulo = -15
+forca_pulo = -18
 no_chao = True
 virado_direita = True
 
