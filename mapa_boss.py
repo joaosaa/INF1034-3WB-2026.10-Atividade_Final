@@ -115,7 +115,7 @@ mapa = [
     "                    ",
     "                    ",
     "                    ",
-    "  PP            PP  ",
+    "                    ",
     "                    ",
     "CCCCCCCCCCCCCCCCCCCC",
     "DDDDDDDDDDDDDDDDDDDD",
