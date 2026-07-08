@@ -26,6 +26,8 @@ som_siri.set_volume(0.2)
 som_aura_tridente.set_volume(0.2)
 som_moeda.set_volume(0.2)
 
+# canal 1 é só dos passos, canal 2 é só do som de matar inimigo,
+# canal 3 é só da moeda. assim nenhum som corta o outro.
 canal_passos = pygame.mixer.Channel(1)
 canal_inimigos = pygame.mixer.Channel(2)
 canal_moeda = pygame.mixer.Channel(3)
@@ -184,6 +186,9 @@ for i in range(num_frames_lagosta):
 
 # spritesheet boss
 spritesheet_boss = pygame.image.load('Characters/boss_final.png').convert_alpha()
+# cortado pelo contorno real de cada frame (bounding box), não fatia fixa -
+# o desenho vai de enrolado a totalmente esticado, então largura/altura
+# variam bastante entre os frames
 frames_boss_bbox = [
     (156, 353, 263, 447),
     (576, 794, 273, 444),
@@ -246,6 +251,8 @@ largura_mapa_px = largura_mapa * TILE
 
 moedas_coletadas = set()
 
+# TRIDENTE: arma pra usar contra o boss, fica em cima da última plataforma
+# do mapa, pouco antes do fade pra tela do boss (LUIGI)
 tem_tridente = False
 img_tridente_bruta = pygame.image.load('tridente.png').convert_alpha()
 img_tridente = img_tridente_bruta.subsurface(pygame.Rect(474, 112, 307, 1008)).copy()
@@ -306,6 +313,7 @@ def criar_inimigo(tipo, x, y, inicio, fim):
 # inimigos
 inimigos = [
 
+    # ---------- PRIMEIRA VOLTA (0 - 3904) ----------
     criar_inimigo("caranguejo", 700, 377, 700, 820),
     criar_inimigo("caranguejo", 1150, 377, 1150, 1400),
     criar_inimigo("caranguejo", 1650, 185, 1650, 1790),
@@ -358,11 +366,6 @@ while True:
 
         # EVENTOS DO MENU, NOME DO JOGADOR E RANKING (LUIGI)
         if evento.type == pygame.KEYDOWN:
-
-            # ATALHO DE TESTE: pula quase pro fim do mapa (não mexe na velocidade normal)
-            if estado_jogo == "JOGANDO" and evento.key == pygame.K_F1:
-                personagem_x = largura_mapa_px * 3 - personagem_parado.get_width() - 200
-                tem_tridente = True
 
             if estado_jogo == "MENU":
                 if evento.key == pygame.K_UP:
