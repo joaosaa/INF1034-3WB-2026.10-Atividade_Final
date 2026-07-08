@@ -26,6 +26,8 @@ som_siri.set_volume(0.2)
 som_aura_tridente.set_volume(0.2)
 som_moeda.set_volume(0.2)
 
+# canal 1 é só dos passos, canal 2 é só do som de matar inimigo,
+# canal 3 é só da moeda. assim nenhum som corta o outro.
 canal_passos = pygame.mixer.Channel(1)
 canal_inimigos = pygame.mixer.Channel(2)
 canal_moeda = pygame.mixer.Channel(3)
@@ -644,7 +646,7 @@ while True:
 
     screen.fill((3, 18, 15))
 
-    estados_que_mostram_cenario = ["JOGANDO", "DERROTA", "VITORIA"]
+    estados_que_mostram_cenario = ["JOGANDO", "VITORIA"]
     if estado_jogo in estados_que_mostram_cenario:
         for i, camada in enumerate(camadas):
             deslocamento = int(camera_x * velocidades[i]) % 1280
@@ -764,7 +766,7 @@ while True:
         screen.blit(texto_derrota, (1280 // 2 - texto_derrota.get_width() // 2, 720 // 2))
 
         texto_voltar = fonte_hud.render("ENTER - Ver Ranking", True, (255, 255, 255))
-        screen.blit(texto_voltar, (1280 // 2 - texto_voltar.get_width() // 2, 720 // 2 + 80))
+        screen.blit(texto_voltar, (1280 // 2 - texto_voltar.get_width() // 2, 720 // 2 + 130))
 
     elif estado_jogo == "VITORIA":
         texto_vitoria = fonte_telas.render("VOCÊ VENCEU!", True, (0, 255, 0))

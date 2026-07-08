@@ -3,7 +3,7 @@ import math
 
 # TRILHA SONORA DO BOSS (LUIGI)
 pygame.mixer.music.load("sounds\TRILHA SONORA\FINAL BOSS\Final Boss.mp3")
-pygame.mixer.music.set_volume(0.090)
+pygame.mixer.music.set_volume(0.4)
 pygame.mixer.music.play(-1)
 
 screen = pygame.display.set_mode((1280, 720))
@@ -153,14 +153,21 @@ CHAO_ARENA = 9 * TILE + 32
 boss_frames = [pygame.transform.scale(f, (int(f.get_width() * 0.9), int(f.get_height() * 0.9))) for f in frames_boss]
 
 CENTRO_BOSS_X = LARGURA_ARENA // 2
-DISTANCIA_LADO = 300          
+DISTANCIA_LADO = 400          
 DURACAO_PREPARO_MS = 400    
-DURACAO_INVESTIDA_MS = 700   
+DURACAO_INVESTIDA_MS = 850   
 INTERVALO_PARADO_MS = 2000    
 VIDA_FASE_2_BOSS = 50
 DURACAO_PREPARO_FASE_2_MS = 300
-DURACAO_INVESTIDA_FASE_2_MS = 500
+DURACAO_INVESTIDA_FASE_2_MS = 620
 INTERVALO_PARADO_FASE_2_MS = 1200
+
+# QUEDA DE ENTRADA: o boss fica fora do mapa por um tempo e depois cai do céu
+TEMPO_ATE_QUEDA_BOSS_MS = 5000
+DURACAO_QUEDA_BOSS_MS = 600
+ALTURA_QUEDA_BOSS = 750
+PONTO_QUEDA_FIXO = 350  # deslocamento do centro da arena; positivo = mais pra direita
+tempo_inicio_mapa = pygame.time.get_ticks()
 
 # Hitbox mais baixa: assim o boss acerta quem esta no chao,
 # mas nao pega o jogador quando ele esta em cima da plataforma.
@@ -169,7 +176,7 @@ HITBOX_BOSS_ALTURA = 120
 hitbox_boss_y = CHAO_ARENA - HITBOX_BOSS_ALTURA
 
 boss = {
-    "estado": "parado",       
+    "estado": "aguardando",   
     "lado": -1,               
     "lado_destino": 1,
     "x_origem": CENTRO_BOSS_X - DISTANCIA_LADO,
@@ -178,11 +185,14 @@ boss = {
     "proxima_acao": pygame.time.get_ticks() + INTERVALO_PARADO_MS,
     "frame_atual": 0,
     "deslocamento_x": -DISTANCIA_LADO,
+    "posicao_atual": -DISTANCIA_LADO,
+    "deslocamento_pouso": -DISTANCIA_LADO,
     "imagem": boss_frames[0],
     "hitbox": pygame.Rect(CENTRO_BOSS_X - DISTANCIA_LADO - HITBOX_BOSS_LARGURA // 2, hitbox_boss_y, HITBOX_BOSS_LARGURA, HITBOX_BOSS_ALTURA),
     "vivo": True,
     "tempo_idle": 0,
-    "offset_y": 0
+    "offset_y": 0,
+    "y_extra": -ALTURA_QUEDA_BOSS
 }
 vida_boss_maxima = 100
 vida_boss = vida_boss_maxima
@@ -201,6 +211,14 @@ while True:
             pygame.quit(); sys.exit()
         if estado_jogo == "DERROTA" and evento.type == pygame.KEYDOWN:
             if evento.key == pygame.K_RETURN:
+                canal_passos.stop()
+                exec(open("jogo_final.py", encoding="utf-8").read())
+                sys.exit()
+        if estado_jogo == "VITORIA" and evento.type == pygame.KEYDOWN:
+            if evento.key == pygame.K_RETURN:
+                if not pontuacao_salva:
+                    salvar_pontuacao(nome_jogador, pontuacao)
+                    pontuacao_salva = True
                 canal_passos.stop()
                 exec(open("jogo_final.py", encoding="utf-8").read())
                 sys.exit()
@@ -265,9 +283,32 @@ while True:
             duracao_investida_atual = DURACAO_INVESTIDA_MS
             intervalo_parado_atual = INTERVALO_PARADO_MS
 
-        if boss["estado"] == "parado":
+        if boss["estado"] == "aguardando":
+            if agora - tempo_inicio_mapa >= TEMPO_ATE_QUEDA_BOSS_MS:
+                boss["estado"] = "caindo"
+                boss["inicio_fase"] = agora
+                # ponto fixo de queda: perto da parede direita, com uma margem
+                deslocamento_alvo = PONTO_QUEDA_FIXO
+                boss["lado"] = -1 if deslocamento_alvo < 0 else 1
+                boss["deslocamento_x"] = deslocamento_alvo
+                boss["deslocamento_pouso"] = deslocamento_alvo
+                boss["frame_atual"] = 0
+
+        elif boss["estado"] == "caindo":
+            progresso = (agora - boss["inicio_fase"]) / DURACAO_QUEDA_BOSS_MS
+            if progresso >= 1:
+                progresso = 1
+                boss["estado"] = "parado"
+                pygame.mixer.Sound("sounds\TRILHA SONORA\FINAL BOSS\queda_monstro.mp3").play()
+                boss["proxima_acao"] = agora + intervalo_parado_atual
+            boss["y_extra"] = -ALTURA_QUEDA_BOSS * (1 - progresso)
+            boss["deslocamento_x"] = boss["deslocamento_pouso"]
+            boss["posicao_atual"] = boss["deslocamento_pouso"]
             boss["frame_atual"] = 0
-            boss["deslocamento_x"] = boss["lado"] * DISTANCIA_LADO
+
+        elif boss["estado"] == "parado":
+            boss["frame_atual"] = 0
+            boss["deslocamento_x"] = boss["posicao_atual"]
             if agora >= boss["proxima_acao"]:
                 boss["estado"] = "preparando"
                 boss["lado_destino"] = boss["lado"] * -1
@@ -278,17 +319,18 @@ while True:
             if progresso >= 1:
                 progresso = 1
                 boss["estado"] = "investindo"
-                boss["x_origem"] = boss["lado"] * DISTANCIA_LADO
+                boss["x_origem"] = boss["posicao_atual"]
                 boss["x_destino"] = boss["lado_destino"] * DISTANCIA_LADO
                 boss["inicio_fase"] = agora
             boss["frame_atual"] = min(3, int(progresso * 4))
-            boss["deslocamento_x"] = boss["lado"] * DISTANCIA_LADO
+            boss["deslocamento_x"] = boss["posicao_atual"]
 
         elif boss["estado"] == "investindo":
             progresso = (agora - boss["inicio_fase"]) / duracao_investida_atual
             if progresso >= 1:
                 progresso = 1
                 boss["lado"] = boss["lado_destino"]
+                boss["posicao_atual"] = boss["x_destino"]
                 boss["estado"] = "parado"
                 boss["proxima_acao"] = agora + intervalo_parado_atual
 
@@ -337,7 +379,7 @@ while True:
     collider_personagem = pygame.Rect(int(personagem_x), int(char1_y), personagem_parado.get_width(), personagem_parado.get_height())
 
     # ATAQUE DO TRIDENTE: durante os frames ativos, cria uma hitbox na frente do jogador.
-    if boss["vivo"] and atacando and not ataque_acertou_boss and atk_frame_atual in FRAMES_ATIVOS_ATAQUE:
+    if boss["vivo"] and boss["estado"] not in ("aguardando", "caindo") and atacando and not ataque_acertou_boss and atk_frame_atual in FRAMES_ATIVOS_ATAQUE:
         alcance_tridente = 150
         altura_tridente = 80
         if virado_direita:
@@ -357,7 +399,7 @@ while True:
                 pontuacao += 500
 
     # COLISAO DO BOSS: encostar bloqueia o jogador; na investida tambem tira vida.
-    if boss["vivo"] and collider_personagem.colliderect(boss["hitbox"]):
+    if boss["vivo"] and boss["estado"] not in ("aguardando", "caindo") and collider_personagem.colliderect(boss["hitbox"]):
         x_antes_do_empurrao = personagem_x
 
         if collider_personagem.centerx < boss["hitbox"].centerx:
@@ -423,45 +465,47 @@ while True:
 
     screen.fill((3, 18, 15))
 
-    for i, camada in enumerate(camadas):
-        screen.blit(camada, (0, 0))
-
-    for i, linha in enumerate(mapa):
-        for j, cel in enumerate(linha):
-            x = j * TILE
-            y = i * TILE
-            if cel == 'C':
-                screen.blit(t_topo, (x, y))
-            elif cel == 'D':
-                screen.blit(t_fill, (x, y))
-            elif cel == 'P':
-                screen.blit(t_topo, (x, y))
-
-    screen.blit(imagem_atual, (int(personagem_x) + deslocamento_x_pulo, pos_y_desenho))
-
     if boss["vivo"]:
+        for i, camada in enumerate(camadas):
+            screen.blit(camada, (0, 0))
+
+        for i, linha in enumerate(mapa):
+            for j, cel in enumerate(linha):
+                x = j * TILE
+                y = i * TILE
+                if cel == 'C':
+                    screen.blit(t_topo, (x, y))
+                elif cel == 'D':
+                    screen.blit(t_fill, (x, y))
+                elif cel == 'P':
+                    screen.blit(t_topo, (x, y))
+
+        screen.blit(imagem_atual, (int(personagem_x) + deslocamento_x_pulo, pos_y_desenho))
+
         boss_img = boss["imagem"]
         boss_pos_x = CENTRO_BOSS_X - boss_img.get_width() // 2 + int(boss["deslocamento_x"])
-        boss_pos_y = CHAO_ARENA - boss_img.get_height() + boss["offset_y"]
+        boss_pos_y = CHAO_ARENA - boss_img.get_height() + boss["offset_y"] + boss.get("y_extra", 0)
         screen.blit(boss_img, (boss_pos_x, boss_pos_y))
 
-    # CORAÇÕES E BARRA DE VIDA DO JOGADOR, IGUAL AO MAPA PRINCIPAL (LUIGI)
-    for i in range(coracoes):
-        screen.blit(img_bolha, (20 + (i * 35), 20))
+        # CORAÇÕES E BARRA DE VIDA DO JOGADOR, IGUAL AO MAPA PRINCIPAL (LUIGI)
+        for i in range(coracoes):
+            screen.blit(img_bolha, (20 + (i * 35), 20))
 
-    pygame.draw.rect(screen, (255, 215, 0), (18, 68, 204, 24), 3)
-    pygame.draw.rect(screen, (0, 105, 148), (20, 70, vida_atual * 2, 20))
+        pygame.draw.rect(screen, (255, 215, 0), (18, 68, 204, 24), 3)
+        pygame.draw.rect(screen, (0, 105, 148), (20, 70, vida_atual * 2, 20))
 
-    # BARRA DE VIDA DO BOSS (LUIGI)
-    largura_barra_boss = 400
-    pygame.draw.rect(screen, (255, 215, 0), (1280 // 2 - largura_barra_boss // 2 - 3, 17, largura_barra_boss + 6, 24), 3)
-    pygame.draw.rect(screen, (148, 0, 0), (1280 // 2 - largura_barra_boss // 2, 20, int(largura_barra_boss * vida_boss / vida_boss_maxima), 18))
+        # BARRA DE VIDA DO BOSS (LUIGI)
+        largura_barra_boss = 400
+        pygame.draw.rect(screen, (255, 215, 0), (1280 // 2 - largura_barra_boss // 2 - 3, 17, largura_barra_boss + 6, 24), 3)
+        pygame.draw.rect(screen, (148, 0, 0), (1280 // 2 - largura_barra_boss // 2, 20, int(largura_barra_boss * vida_boss / vida_boss_maxima), 18))
 
-    if not boss["vivo"]:
+    else:
         texto_vitoria = fonte_telas.render("VOCE VENCEU!", True, (0, 255, 0))
         texto_pontos = fonte_hud.render("Pontuacao Final: " + str(pontuacao), True, (255, 215, 0))
-        screen.blit(texto_vitoria, (1280 // 2 - texto_vitoria.get_width() // 2, 720 // 2 - 50))
-        screen.blit(texto_pontos, (1280 // 2 - texto_pontos.get_width() // 2, 720 // 2 + 40))
+        texto_voltar = fonte_hud.render("ENTER - Continuar", True, (255, 255, 255))
+        screen.blit(texto_vitoria, (1280 // 2 - texto_vitoria.get_width() // 2, 720 // 2 - 100))
+        screen.blit(texto_pontos, (1280 // 2 - texto_pontos.get_width() // 2, 720 // 2 + 50))
+        screen.blit(texto_voltar, (1280 // 2 - texto_voltar.get_width() // 2, 720 // 2 + 140))
 
     # fade de entrada
     if fade_alpha > 0:

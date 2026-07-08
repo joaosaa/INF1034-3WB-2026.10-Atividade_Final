@@ -1,5 +1,5 @@
+das,500
+dasd,500
+dasdas,500
 a,350
 a,350
-a,350
-denis,200
-luiji,200
