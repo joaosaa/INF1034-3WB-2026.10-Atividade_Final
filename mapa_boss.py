@@ -141,7 +141,7 @@ personagem_x = 100.0
 char1_y = (9 * TILE + 32) - personagem_parado.get_height()
 velocidadechar1_y = 0
 gravidade = 0.8
-forca_pulo = -18
+forca_pulo = -15
 no_chao = True
 virado_direita = True
 
@@ -166,9 +166,11 @@ INTERVALO_PARADO_FASE_2_MS = 1200
 TEMPO_ATE_QUEDA_BOSS_MS = 5000
 DURACAO_QUEDA_BOSS_MS = 600
 ALTURA_QUEDA_BOSS = 750
-PONTO_QUEDA_FIXO = 350  
+PONTO_QUEDA_FIXO = 350  # deslocamento do centro da arena; positivo = mais pra direita
 tempo_inicio_mapa = pygame.time.get_ticks()
 
+# Hitbox mais baixa: assim o boss acerta quem esta no chao,
+# mas nao pega o jogador quando ele esta em cima da plataforma.
 HITBOX_BOSS_LARGURA = 240
 HITBOX_BOSS_ALTURA = 120
 hitbox_boss_y = CHAO_ARENA - HITBOX_BOSS_ALTURA
@@ -254,6 +256,7 @@ while True:
             pontuacao = 0
             vida_atual = 0
             canal_passos.stop()
+            pygame.mixer.music.stop()
             pygame.mixer.Sound("sounds/SOM DE VITORIA E DERROTA/derrota_som.mp3").play()
         else:
             personagem_x = ARENA_PERSONAGEM_X
@@ -286,6 +289,7 @@ while True:
             if agora - tempo_inicio_mapa >= TEMPO_ATE_QUEDA_BOSS_MS:
                 boss["estado"] = "caindo"
                 boss["inicio_fase"] = agora
+                # ponto fixo de queda: perto da parede direita, com uma margem
                 deslocamento_alvo = PONTO_QUEDA_FIXO
                 boss["lado"] = -1 if deslocamento_alvo < 0 else 1
                 boss["deslocamento_x"] = deslocamento_alvo
@@ -339,7 +343,7 @@ while True:
         if boss["estado"] in ("preparando", "investindo"):
             direcao_atual = boss["lado_destino"]
         else:
-            direcao_atual = boss["lado"] * -1  
+            direcao_atual = boss["lado"] * -1  # parado: encara pra dentro da arena
         if direcao_atual > 0:
             boss["imagem"] = pygame.transform.flip(boss["imagem"], True, False)
 
@@ -395,6 +399,7 @@ while True:
                 estado_jogo = "VITORIA"
                 canal_passos.stop()
                 pontuacao += 500
+                pygame.mixer.music.stop()
                 pygame.mixer.Sound("sounds/SOM DE VITORIA E DERROTA/vitoria_som.mp3").play()
 
     # COLISAO DO BOSS: encostar bloqueia o jogador; na investida tambem tira vida.

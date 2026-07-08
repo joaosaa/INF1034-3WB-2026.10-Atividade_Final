@@ -26,8 +26,6 @@ som_siri.set_volume(0.2)
 som_aura_tridente.set_volume(0.2)
 som_moeda.set_volume(0.2)
 
-# canal 1 é só dos passos, canal 2 é só do som de matar inimigo,
-# canal 3 é só da moeda. assim nenhum som corta o outro.
 canal_passos = pygame.mixer.Channel(1)
 canal_inimigos = pygame.mixer.Channel(2)
 canal_moeda = pygame.mixer.Channel(3)
@@ -186,9 +184,6 @@ for i in range(num_frames_lagosta):
 
 # spritesheet boss
 spritesheet_boss = pygame.image.load('Characters/boss_final.png').convert_alpha()
-# cortado pelo contorno real de cada frame (bounding box), não fatia fixa -
-# o desenho vai de enrolado a totalmente esticado, então largura/altura
-# variam bastante entre os frames
 frames_boss_bbox = [
     (156, 353, 263, 447),
     (576, 794, 273, 444),
@@ -251,8 +246,6 @@ largura_mapa_px = largura_mapa * TILE
 
 moedas_coletadas = set()
 
-# TRIDENTE: arma pra usar contra o boss, fica em cima da última plataforma
-# do mapa, pouco antes do fade pra tela do boss (LUIGI)
 tem_tridente = False
 img_tridente_bruta = pygame.image.load('tridente.png').convert_alpha()
 img_tridente = img_tridente_bruta.subsurface(pygame.Rect(474, 112, 307, 1008)).copy()
@@ -446,6 +439,7 @@ while True:
             if coracoes <= 0:
                 estado_jogo = "DERROTA"
                 pontuacao = 0
+                pygame.mixer.music.stop()
                 pygame.mixer.Sound("sounds/SOM DE VITORIA E DERROTA/derrota_som.mp3").play()
             else:
                 estado_jogo = "TELA_QUEDA"
@@ -460,6 +454,7 @@ while True:
             if coracoes <= 0:
                 estado_jogo = "DERROTA"
                 pontuacao = 0
+                pygame.mixer.music.stop()
                 pygame.mixer.Sound("sounds/SOM DE VITORIA E DERROTA/derrota_som.mp3").play()
             else:
                 estado_jogo = "TELA_QUEDA"
@@ -468,6 +463,7 @@ while True:
         if coracoes <= 0:
             estado_jogo = "DERROTA"
             pontuacao = 0
+            pygame.mixer.music.stop()
             pygame.mixer.Sound("sounds/SOM DE VITORIA E DERROTA/derrota_som.mp3").play()
 
         # TROCA DE MAPA: ao chegar no limite, começa o fade em vez de ir direto pra vitória
@@ -776,7 +772,7 @@ while True:
         texto_voltar = fonte_hud.render("ENTER - Ver Ranking", True, (255, 255, 255))
         screen.blit(texto_voltar, (1280 // 2 - texto_voltar.get_width() // 2, 720 // 2 + 130))
 
-    # FADE / TROCA DE MAPA
+    # FADE
     if fadendo:
         fade_alpha = min(255, fade_alpha + 3)
         fade_surface.set_alpha(fade_alpha)
